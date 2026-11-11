@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dialogue.schema.json",
+  "title": "Dialogue (명세서 14.5, 16.11)",
+  "type": "object",
+  "required": ["schema_version", "start", "nodes"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "start": {"type": "string"},
+    "nodes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["speaker", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "speaker": {"type": "string"},
+          "text": {"type": "string"},
+          "next": {"type": ["string", "null"]},
+          "choices": {
+            "type": "array", "maxItems": 3,
+            "items": {
+              "type": "object", "required": ["text", "intent"], "additionalProperties": false,
+              "properties": {
+                "text": {"type": "string"},
+                "intent": {"enum": ["accept_errand", "ok", "warn", "escort", "shout", "ask"], "description": "warn also records SHOUT(method=choice)"},
+                "next": {"type": ["string", "null"]}
+              }
+            }
+          },
+          "on_end": {
+            "type": "object", "additionalProperties": false,
+            "properties": {
+              "quest": {"enum": ["fetch_document", "return_document"]},
+              "flow": {"enum": ["to_prefire"]}
+            }
+          }
+        }
+      }
+    }
+  }
+}

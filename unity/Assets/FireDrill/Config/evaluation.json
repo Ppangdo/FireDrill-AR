@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "mvp_only": true,
+  "grade_ratio": {"good": 1.0, "normal": 0.5, "poor": 0.0},
+  "standing_head_m": 1.65,
+  "posture_threshold": 0.7,
+  "summary_template": "결과 {outcome_ko}, 총점 {total_pct}%. 가장 잘한 점: {best}. 가장 먼저 고칠 점: {worst}.",
+  "items": [
+    {
+      "id": "alert", "name": "화재 알리기", "mvp": true, "weight": 10,
+      "thresholds": {"good_max_s": 30, "normal_max_s": 60},
+      "rule_ref": "FIRE-01",
+      "measure": "d = (t0 이후 첫 ALARM_PRESSED 또는 SHOUT의 t) - t0. d <= good_max_s 이면 good, <= normal_max_s 이면 normal, 그 외·없음은 poor. t0가 없으면 na. evidence: {delay_s}",
+      "text": {"good": "화재를 알아챈 뒤 {delay_s}초 만에 주변에 알렸습니다.", "improve": "화재를 주변에 알리기까지 {delay_s}초가 걸렸거나 알리지 않았습니다.", "guideline": "불을 발견하면 \"불이야!\"라고 외치거나 비상벨을 눌러 주변에 알립니다."}
+    },
+    {
+      "id": "evac_delay", "name": "대피 개시 지연", "mvp": true, "weight": 15,
+      "thresholds": {"good_max_s": 30, "normal_max_s": 60, "window_s": 5, "min_drop_m": 1.5, "max_rise_m": 0.05, "first_step_drop_m": 0.1},
+      "rule_ref": "FIRE-02",
+      "measure": "SAMPLE마다 e = ZoneGraph.ExitDistance(pos). 출구 구역으로의 ZONE_ENTER는 e = 0인 표본으로 추가한다. t0 이후 표본 s 중 처음으로 (1) e(다음) < e(s) - first_step_drop_m, (2) s부터 min(s.t + window_s, 출구 도착)까지 연속 표본 차이가 모두 <= max_rise_m, (3) 그 구간에서 e가 min_drop_m 이상 줄었거나 출구에 도착 — 을 만족하는 s.t를 시작 시각으로 한다. delay = 시작 - t0. good/normal 기준은 delay. 시작이 없으면 poor. t0가 없으면 na. evidence: {delay_s}",
+      "text": {"good": "단서를 알아챈 뒤 {delay_s}초 만에 대피를 시작했습니다.", "improve": "대피를 시작하기까지 {delay_s}초가 걸렸거나 대피하지 않았습니다.", "guideline": "화재를 알게 되면 하던 일을 멈추고 즉시 대피합니다."}
+    },
+    {
+      "id": "no_elevator", "name": "엘리베이터 미사용", "mvp": true, "weight": 10,
+      "thresholds": {"good_max_count": 0},
+      "rule_ref": "FIRE-03",
+      "measure": "run 전체의 ELEVATOR_CALL 횟수가 good_max_count 이하이면 good, 아니면 poor. evidence: {calls}",
+      "text": {"good": "엘리베이터를 이용하지 않았습니다.", "improve": "엘리베이터를 {calls}번 호출했습니다.", "guideline": "화재 시에는 엘리베이터를 이용하지 않고 계단으로 대피합니다."}
+    },
+    {
+      "id": "door_check", "name": "문 손잡이 확인", "mvp": true, "weight": 10,
+      "thresholds": {"good_min_ratio": 1.0, "normal_min_ratio": 0.5, "check_window_s": 5},
+      "rule_ref": "FIRE-04",
+      "measure": "t0 이후 DOOR_OPEN 중 data.checked_before = true인 비율. checked_before는 Runtime이 같은 간선의 HANDLE_CHECK가 check_window_s 이내에 있었는지로 채우고, Evaluator는 그대로 쓴다. hot = true인 DOOR_OPEN이 하나라도 있으면 poor. DOOR_OPEN이 없으면 na. evidence: {checked, opened, hot_opened}",
+      "text": {"good": "문을 열기 전에 손잡이 온도를 확인했습니다 ({checked}/{opened}).", "improve": "문을 열기 전에 손잡이를 확인하지 않았거나 뜨거운 문을 열었습니다 ({checked}/{opened}).", "guideline": "문을 열기 전 손등으로 손잡이를 만져 보고, 뜨거우면 문을 열지 않습니다."}
+    },
+    {
+      "id": "nose_mouth", "name": "코·입 보호", "mvp": true, "weight": 10,
+      "thresholds": {"smoke_d_min": 0.3},
+      "rule_ref": "FIRE-05",
+      "measure": "t0 이후 처음으로 zone_d >= smoke_d_min인 SAMPLE의 시각 ts에서의 수건 상태. ts 이전 마지막 TOWEL_EQUIP의 data.on = true이고 ts 이전에 TOWEL_WET가 있으면 good(wet), 착용했지만 젖지 않았으면 normal(dry), 착용하지 않았으면 poor(none). 그런 SAMPLE이 없으면 na. evidence: {towel}",
+      "text": {"good": "연기 구간에 들어가기 전에 젖은 수건으로 코와 입을 막았습니다.", "improve": "연기 구간에서 코와 입을 충분히 보호하지 못했습니다 (수건: {towel}).", "guideline": "젖은 수건이나 담요로 코와 입을 막고 대피합니다."}
+    },
+    {
+      "id": "low_posture", "name": "연기 속 자세", "mvp": true, "weight": 15,
+      "thresholds": {"good_min_ratio": 0.8, "normal_min_ratio": 0.5},
+      "rule_ref": "FIRE-06",
+      "measure": "t0 이후 SAMPLE 중 layer_y < standing_head_m인 표본들에서 head_ratio <= posture_threshold인 비율. 그런 표본이 없으면 na. evidence: {low_ratio, samples}",
+      "text": {"good": "연기가 내려온 구간에서 자세를 낮췄습니다 ({low_ratio}).", "improve": "연기가 내려온 구간에서 자세를 충분히 낮추지 않았습니다 ({low_ratio}).", "guideline": "연기가 있으면 몸을 낮추고 바닥 가까이로 이동합니다."}
+    },
+    {
+      "id": "extinguish", "name": "초기 소화 판단", "mvp": false, "weight": 10,
+      "thresholds": {"long_attempt_s": 10},
+      "rule_ref": "FIRE-07",
+      "measure": "EXTINGUISH(phase=initial, success=true)가 있으면 good. phase가 growing 또는 full인 EXTINGUISH의 duration 합이 long_attempt_s 이상이면 poor. 그 외(미사용 등)는 normal. mvp_only이면 na.",
+      "text": {"good": "작은 불일 때 소화기로 신속히 껐습니다.", "improve": "불이 커진 뒤에도 소화를 오래 시도했거나, 끌 수 있는 불을 두고 지나쳤습니다.", "guideline": "불길이 천장에 닿기 전 작은 불이면 소화기로 끄고, 커졌으면 즉시 대피합니다."}
+    },
+    {
+      "id": "blocked_response", "name": "대피 불가 시 대응", "mvp": false, "weight": 10,
+      "thresholds": {"good_max_s": 60, "normal_max_s": 120},
+      "rule_ref": "FIRE-08",
+      "measure": "경로가 차단된 시각부터 WINDOW_SIGNAL 또는 refuge 구역 ZONE_ENTER까지의 시간. 차단이 없으면 na. mvp_only이면 na.",
+      "text": {"good": "대피로가 막히자 신속히 구조를 요청했습니다.", "improve": "대피로가 막힌 뒤 구조 요청이 늦었습니다.", "guideline": "대피가 어려우면 창문으로 구조를 요청하거나 대피 공간을 이용합니다."}
+    },
+    {
+      "id": "belongings", "name": "소지품 수집 지연", "mvp": true, "weight": 10,
+      "thresholds": {"good_max_count": 0, "normal_max_count": 1},
+      "rule_ref": "FIRE-09",
+      "measure": "t0 이후 data.essential = false인 PICKUP의 개수. good_max_count 이하 good, normal_max_count 이하 normal, 그 이상 poor. evidence: {count, items}",
+      "text": {"good": "불필요한 물건을 챙기지 않고 대피했습니다.", "improve": "대피 중 물건({items})을 챙기느라 시간을 썼습니다.", "guideline": "화재 시에는 소지품을 챙기지 않고 즉시 대피합니다."}
+    },
+    {
+      "id": "warn_others", "name": "타인 알리기·동행", "mvp": true, "weight": 10,
+      "thresholds": {"good_min_ratio": 1.0},
+      "rule_ref": "FIRE-10",
+      "measure": "scenario.npcs 중 NPC_INTERACT action이 warn 또는 escort인 NPC의 비율. good_min_ratio 이상 good, 0 초과 normal, 0 poor. NPC가 없으면 na. evidence: {helped, total}",
+      "text": {"good": "주변 사람 모두에게 화재를 알리거나 함께 대피했습니다 ({helped}/{total}).", "improve": "주변 사람에게 충분히 알리지 못했습니다 ({helped}/{total}).", "guideline": "대피하면서 주변 사람에게 화재를 알리고 함께 대피합니다."}
+    }
+  ],
+  "rules": {
+    "FIRE-01": {"source": "국민재난안전포털 화재 행동요령", "quote": "(원문 확정 후 입력)", "cross_ref": "소방청"},
+    "FIRE-02": {"source": "국민재난안전포털 화재 행동요령", "quote": "(원문 확정 후 입력)", "cross_ref": "소방청"},
+    "FIRE-03": {"source": "국민재난안전포털 화재 행동요령", "quote": "(원문 확정 후 입력)", "cross_ref": "소방청"},
+    "FIRE-04": {"source": "국민재난안전포털 화재 행동요령", "quote": "(원문 확정 후 입력)", "cross_ref": "소방청"},
+    "FIRE-05": {"source": "국민재난안전포털 화재 행동요령", "quote": "(원문 확정 후 입력)", "cross_ref": "소방청"},
+    "FIRE-06": {"source": "국민재난안전포털 화재 행동요령", "quote": "(원문 확정 후 입력)", "cross_ref": "소방청"},
+    "FIRE-07": {"source": "국민재난안전포털 화재 행동요령", "quote": "(원문 확정 후 입력)", "cross_ref": "소방청"},
+    "FIRE-08": {"source": "국민재난안전포털 화재 행동요령", "quote": "(원문 확정 후 입력)", "cross_ref": "소방청"},
+    "FIRE-09": {"source": "국민재난안전포털 화재 행동요령", "quote": "(원문 확정 후 입력)", "cross_ref": "소방청"},
+    "FIRE-10": {"source": "국민재난안전포털 화재 행동요령", "quote": "(원문 확정 후 입력)", "cross_ref": "소방청"}
+  }
+}

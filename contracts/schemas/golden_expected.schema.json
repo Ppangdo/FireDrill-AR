@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "golden_expected.schema.json",
+  "title": "Expected evaluation for a golden log (명세서 15.1). Only these fields are asserted.",
+  "type": "object",
+  "required": ["schema_version", "log", "outcome", "total_pct", "grades"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "log": {"type": "string"},
+    "description": {"type": "string"},
+    "outcome": {"enum": ["escaped", "rescued", "failed", "timeout", "aborted"]},
+    "total_pct": {"type": "integer", "minimum": 0, "maximum": 100},
+    "grades": {
+      "type": "object",
+      "required": ["alert", "evac_delay", "no_elevator", "door_check", "nose_mouth", "low_posture", "extinguish", "blocked_response", "belongings", "warn_others"],
+      "additionalProperties": false,
+      "patternProperties": {".*": {"enum": ["good", "normal", "poor", "na"]}}
+    }
+  }
+}

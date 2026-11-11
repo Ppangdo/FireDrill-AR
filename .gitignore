@@ -1,0 +1,38 @@
+# ---- Unity (project lives in unity/) ----
+unity/[Ll]ibrary/
+unity/[Tt]emp/
+unity/[Oo]bj/
+unity/[Bb]uild/
+unity/[Bb]uilds/
+unity/[Ll]ogs/
+unity/[Uu]ser[Ss]ettings/
+unity/[Mm]emoryCaptures/
+unity/[Rr]ecordings/
+unity/*.csproj
+unity/*.sln
+unity/*.slnx
+unity/*.user
+unity/*.pidb
+unity/*.booproj
+unity/*.svd
+unity/*.pdb
+unity/*.mdb
+unity/*.opendb
+unity/*.VC.db
+unity/crashlytics-build.properties
+.vs/
+.vsconfig
+.idea/
+.vscode/
+
+# ---- Python server ----
+server/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+server/*.db
+server/*.sqlite
+.env
+
+# ---- Local outputs (logs, test results, screenshots) ----
+out/

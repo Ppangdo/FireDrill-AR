@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "model": "placeholder",
+  "generated_at": "2026-11-11",
+  "entries": {
+    "npc_minji|warn|1|freeze": {"action": "evacuate", "line": "네, 네! 바로 나갈게요!", "emotion": "scared"},
+    "npc_minji|warn|2|freeze": {"action": "follow_player", "line": "선배, 저 따라갈게요!", "emotion": "panicked"},
+    "npc_minji|escort|1|freeze": {"action": "follow_player", "line": "고마워요, 같이 가요.", "emotion": "relieved"},
+    "npc_minji|escort|2|freeze": {"action": "follow_player", "line": "선배만 따라갈게요.", "emotion": "scared"},
+    "npc_junho|warn|1|go_elevator": {"action": "evacuate", "line": "아, 맞다. 계단으로 갈게!", "emotion": "calm"},
+    "npc_junho|warn|2|go_elevator": {"action": "evacuate", "line": "알겠어, 계단으로 가자!", "emotion": "scared"},
+    "npc_junho|escort|1|go_elevator": {"action": "follow_player", "line": "그래, 같이 가.", "emotion": "calm"},
+    "npc_junho|escort|2|go_elevator": {"action": "follow_player", "line": "알았어, 너 따라갈게.", "emotion": "scared"}
+  },
+  "fallback": {
+    "npc_minji": ["무서워요…", "어떡하죠…"],
+    "npc_junho": ["엘리베이터 타면 빠르잖아!", "금방 올 거야."]
+  }
+}

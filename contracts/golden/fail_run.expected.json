@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "log": "fail_run.jsonl",
+  "description": "실패 플레이: 가방 챙기기, 확인 없이 문 열기, NPC 무시, 엘리베이터 앞에서 기다리다 쓰러짐",
+  "outcome": "failed",
+  "total_pct": 6,
+  "grades": {
+    "alert": "poor",
+    "evac_delay": "poor",
+    "no_elevator": "poor",
+    "door_check": "poor",
+    "nose_mouth": "poor",
+    "low_posture": "poor",
+    "extinguish": "na",
+    "blocked_response": "na",
+    "belongings": "normal",
+    "warn_others": "poor"
+  }
+}

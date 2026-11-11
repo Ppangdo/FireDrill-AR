@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "app_config.schema.json",
+  "title": "App config (명세서 14.5)",
+  "type": "object",
+  "required": ["schema_version", "platform", "server_url", "device_id", "device_token", "building_id", "scenario_id", "offline", "language"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "platform": {"enum": ["pc", "quest"]},
+    "server_url": {"type": "string"},
+    "device_id": {"type": "string"},
+    "device_token": {"type": "string"},
+    "building_id": {"type": "string"},
+    "scenario_id": {"type": "string", "pattern": "^s_"},
+    "offline": {"type": "boolean"},
+    "skip_calibration": {"type": "boolean", "description": "PC: true (standing head fixed to evaluation.standing_head_m). Quest: false"},
+    "language": {"enum": ["ko"]}
+  }
+}

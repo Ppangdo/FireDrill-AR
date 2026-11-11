@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "log": "model_run.jsonl",
+  "description": "모범 플레이: 수건을 적셔 착용, 민지 동행, 준호에게 경고, 경보, 낮은 자세로 남쪽 계단 탈출",
+  "outcome": "escaped",
+  "total_pct": 100,
+  "grades": {
+    "alert": "good",
+    "evac_delay": "good",
+    "no_elevator": "good",
+    "door_check": "good",
+    "nose_mouth": "good",
+    "low_posture": "good",
+    "extinguish": "na",
+    "blocked_response": "na",
+    "belongings": "good",
+    "warn_others": "good"
+  }
+}
