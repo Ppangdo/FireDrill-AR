@@ -45,6 +45,19 @@ namespace FireDrill.Platform.Pc
         public event Action<Intent> IntentRaised;
         public string FocusedTargetId { get; private set; }
         public event Action<int> ChoiceKey;
+        public event Action DebugToggle;
+        private bool _uiFocus;
+
+        public bool UiFocus
+        {
+            get => _uiFocus;
+            set
+            {
+                if (_uiFocus == value) return;
+                _uiFocus = value;
+                if (_inputEnabled) { Cursor.lockState = value ? CursorLockMode.None : CursorLockMode.Locked; Cursor.visible = value; }
+            }
+        }
 
         public void SetShake(float amplitudeDeg, float hz)
         {
@@ -59,8 +72,9 @@ namespace FireDrill.Platform.Pc
             {
                 if (_inputEnabled == value) return;
                 _inputEnabled = value;
-                Cursor.lockState = value ? CursorLockMode.Locked : CursorLockMode.None;
-                Cursor.visible = !value;
+                bool locked = value && !_uiFocus;
+                Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
+                Cursor.visible = !locked;
             }
         }
 
@@ -99,6 +113,7 @@ namespace FireDrill.Platform.Pc
             float dt = Time.deltaTime;
 
             // Emergency stop works in every state (명세서 16.7: Esc held abort_hold_s).
+            if (kb != null && kb.f1Key.wasPressedThisFrame) DebugToggle?.Invoke();
             if (kb != null && kb.escapeKey.isPressed)
             {
                 _escHeld += Time.unscaledDeltaTime;
@@ -112,7 +127,7 @@ namespace FireDrill.Platform.Pc
 
             if (!InputEnabled || kb == null) { FocusedTargetId = null; return; }
 
-            if (mouse != null)
+            if (mouse != null && !_uiFocus)
             {
                 var d = mouse.delta.ReadValue() * _pc.MouseSensitivityDeg;
                 transform.Rotate(0f, d.x, 0f, UnityEngine.Space.Self);
@@ -158,10 +173,10 @@ namespace FireDrill.Platform.Pc
             else { _eHeld = 0; _eFired = false; }
 
             // Extinguisher: hold the left mouse button; the spray time is reported on release.
-            if (mouse != null && mouse.leftButton.isPressed) _sprayHeld += dt;
+            if (mouse != null && mouse.leftButton.isPressed && !_uiFocus) _sprayHeld += dt;
             else if (_sprayHeld > 0f) { Raise(IntentKind.Use, ItemInteractions.FireTarget, _sprayHeld); _sprayHeld = 0f; }
 
-            if (kb.digit1Key.wasPressedThisFrame) ChoiceKey?.Invoke(0);
+            if (kb.digit1Key.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame) ChoiceKey?.Invoke(0);
             if (kb.digit2Key.wasPressedThisFrame) ChoiceKey?.Invoke(1);
             if (kb.digit3Key.wasPressedThisFrame) ChoiceKey?.Invoke(2);
             if (kb.tKey.wasPressedThisFrame) Raise(IntentKind.TowelToggle);

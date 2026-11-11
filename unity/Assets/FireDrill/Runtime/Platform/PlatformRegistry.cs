@@ -16,8 +16,12 @@ namespace FireDrill.Runtime
         Camera Camera { get; }
         /// <summary>Body stage 3 view shake (명세서 16.11, PC only). 0 = off.</summary>
         void SetShake(float amplitudeDeg, float hz);
-        /// <summary>Dialogue choice key pressed (0-based), for the open conversation.</summary>
+        /// <summary>Dialogue choice key pressed (0-based), for the open conversation. Enter/Space = 0.</summary>
         event System.Action<int> ChoiceKey;
+        /// <summary>A UI element wants the pointer (dialogue choices): free the cursor, stop mouse look, keep walking.</summary>
+        bool UiFocus { get; set; }
+        /// <summary>Developer overlay toggle (F1 on PC).</summary>
+        event System.Action DebugToggle;
     }
 
     public sealed class PlatformContext

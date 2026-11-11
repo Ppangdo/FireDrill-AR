@@ -8,7 +8,7 @@
 | `../unity/Assets/FireDrill/Runtime/Contracts/` | 플랫폼 어댑터 인터페이스 (`IPlayerRig`, `IInteractionSource`, `ISpaceProvider`) |
 | `../server/app/schemas.py` | 서버 API Pydantic 모델 |
 | `golden/` | 표준 로그 3종 + 기대 평가, 화재 참조 궤적 `fire_demo.trace.json` (모두 `gen_golden.py`로 생성) |
-| `playscripts/` | 자동 플레이 스크립트 (15.2). `walk_play`는 3단계 통과 조건용, `model_play`·`fail_play`는 4단계 통과 조건(결말·항목별 등급) |
+| `playscripts/` | 자동 플레이 스크립트 (15.2). `walk_play`는 3단계 통과 조건용, `model_play`·`fail_play`는 4·6단계 통과 조건(결말·항목별 등급·NPC 결과), `tutorial_play`는 7단계(Boot부터 Report까지) |
 | `tools/gen_golden.py` | 표준 로그 생성기 (stdlib) |
 | `tools/ref_eval.py` | 참조 평가기. C# Evaluator는 이것과 같은 등급을 내야 한다 |
 | `tools/ref_fire.py` | 참조 화재 모델. C# FireEngine은 이것과 D가 0.01 안에서 같아야 하고, `fire.json`은 `scenario.json`의 `tuning_targets`를 만족해야 한다 |
@@ -18,7 +18,7 @@
 ```
 uv run --project server python -m pytest server/tests        # 스키마·상호 참조·표준 로그·화재 궤적 + 서버 엔드포인트 (93개)
 Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults ../out/editmode.xml   # 106개
-Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResults ../out/playmode.xml               # 17개 (실제 서버를 띄움, 스크린샷 포함)
+Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResults ../out/playmode.xml               # 20개 (실제 서버를 띄움, 스크린샷 포함)
 ```
 
 `fire.json`·`scenario.json`·`zone_graph.json`을 바꾸면 `gen_golden.py`를 다시 돌려 `fire_demo.trace.json`을 갱신한다 (CI가 차이를 잡는다). C# 테스트 `FireEngineTests.MatchesReferenceModel_180s`가 이 파일과 비교한다.
@@ -115,6 +115,20 @@ Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResult
 - **플레이 스크립트 `want_open`**: `toggle_door` 단계에 선택 필드. 문이 이미 그 상태면 건너뛴다(NPC가 먼저 연 경우). `playscript.schema.json`에 추가.
 - **`fail_play`**: 준호(무시)는 엘리베이터 로비에 남거나 쓰러지고, 민지는 실습실에서 얼어붙은 채 남는다(문이 열려 연기가 들어오면 쓰러짐).
 
+## 7단계(튜토리얼·UI) 구현 메모
+
+명세서에 정해져 있지 않아 구현에서 고른 것. 코드는 `Runtime/Dialogue/DialogueRunner.cs`, `Runtime/UI/UiRoot.cs`·`UiPanel.cs`, 화면 파일은 `UI/Resources/FireDrillUI/UiRoot.uxml`·`Hud.uss`, 테스트는 `Tests/PlayMode/FlowAndUiTests.cs`.
+
+- **튜토리얼(5장)**: Tutorial 진입 시 `tutorial.start_node` → `on_end.quest: fetch_document` → 서류(`errand_object`)를 가진 채 `return_zone`에 들어가면 `return_node` → `on_end.flow: to_prefire`로 PreFire. `tutorial.max_s`(300초)가 지나면 대화를 닫고 PreFire. 선택지 없는 대사는 `ui.line_s`(6초) 또는 Enter·Space·1로 넘어간다. 대화 중에도 게임은 멈추지 않는다. 3단계의 "튜토리얼 바로 건너뛰기"는 없앴다.
+- **화면(16.11)**: 한 UIDocument에 시작 안내(Boot·Calibration: 참가자 코드, 실패 연출·중단 방법 안내, 조작법, 서버 상태, "요원 확인 · 훈련 시작" 버튼 = 요원 확인), HUD(자막, 상호작용 표식 `ui.prompts`, 인벤토리 오른쪽 아래 4줄, 서버 감시로 멈췄을 때 배너), 대화창(하단 1/3, 화자·본문·선택지 최대 3개, 숫자키·클릭), 결말(`ui.endings` + 발화 후 시간 + 마지막 위치 연기 농도), 중단("훈련이 중단되었습니다" + 종료). 리포트는 5단계 `ReportView`. 화재 중 게이지·미니맵 없음.
+- **커서**: 선택지가 있는 대화가 열리면 `IPlatform.UiFocus`로 커서를 풀고 마우스 시점을 멈춘다(걷기는 됨). 이때 마우스 왼쪽은 소화기가 아니다.
+- **개발자 오버레이**: 3단계의 `DebugOverlay`는 기본으로 숨기고 F1로 켠다(`BootstrapOptions.DebugOverlay`). 설정 파일 오류 화면은 그대로 IMGUI.
+- **자동 시작**: 테스트처럼 참가자 코드를 미리 주면 다음 프레임에 시작한다(상태 변경 알림 안에서 또 상태를 바꾸지 않도록).
+- **Resources 이름**: `Resources.Load`는 이름이 같은 에셋 중 하나만 고르므로 UXML과 USS 이름을 다르게 둔다(`UiRoot.uxml` + `Hud.uss`, `ReportView.uxml` + `Report.uss`).
+- **`runtime.json` 추가**: `ui.line_s`, `ui.prompts`, `ui.items`, `ui.towel_states`, `ui.endings`.
+- **요원 화면**: 2단계 서버의 `/staff`가 그대로 쓰인다(Unity 쪽 변경 없음).
+- **스크린샷**: `out/screenshots/stage7/` — 시작 안내, 튜토리얼 대화+HUD, 결말, 중단(UI 패널만).
+
 ## 명세서 반영 대기
 
 1. **14.6 요원 화면 보조 엔드포인트**: `GET /staff/devices` → `{schema_version, devices: [{device_id, connected, status: WsStatus|null, status_age_s}]}`. 요원 화면이 1초마다 읽는다. 9·14.6 표에 추가하면 된다.
@@ -135,6 +149,8 @@ Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResult
 16. **15.2 플레이 스크립트**: `toggle_door`의 `want_open` 필드.
 17. **16.13 모범 플레이 동선**: 경보 → 복도에서 낮은 자세로 머묾 → 떠나기 직전 준호에게 알림.
 18. **14.5 `runtime.json` 내용**: `npc` 섹션, `network.npc_timeout_s`, `ui.npc_results`.
+19. **5장 Calibration**: PC에서는 시작 안내 화면의 "요원 확인 · 훈련 시작" 버튼이 요원 확인이다(참가자 코드 입력 포함).
+20. **14.5 `runtime.json` 내용**: `ui.line_s`·`prompts`·`items`·`towel_states`·`endings`.
 
 ## 명세서 반영 완료 (2026-11-11)
 

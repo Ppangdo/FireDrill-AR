@@ -11,8 +11,6 @@ namespace FireDrill.Runtime
     /// Scores and the table appear at once; the sentences are replaced when the server's report arrives.</summary>
     public sealed class ReportView : MonoBehaviour
     {
-        public const string ResourceDir = "FireDrillUI/";
-
         private ConfigSet _config;
         private UIDocument _doc;
         private PanelSettings _panel;
@@ -36,24 +34,8 @@ namespace FireDrill.Runtime
         {
             _config = config;
             var ui = config.Runtime.Ui;
-            _panel = ScriptableObject.CreateInstance<PanelSettings>();
-            _panel.themeStyleSheet = Resources.Load<ThemeStyleSheet>(ResourceDir + "FireDrillTheme");
-            _panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
-            _panel.referenceResolution = new Vector2Int(ui.ReferenceResolution[0], ui.ReferenceResolution[1]);
-            _panel.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
-            _panel.match = 0.5f;
-            _panel.sortingOrder = 10;
-
-            gameObject.SetActive(false);
-            _doc = gameObject.AddComponent<UIDocument>();
-            _doc.panelSettings = _panel;
-            _doc.visualTreeAsset = Resources.Load<VisualTreeAsset>(ResourceDir + "ReportView");
-            gameObject.SetActive(true);
-
+            _doc = UiPanel.Create(gameObject, ui, "ReportView", "Report", 10, out _panel);
             _root = _doc.rootVisualElement.Q("report-root");
-            _doc.rootVisualElement.styleSheets.Add(Resources.Load<StyleSheet>(ResourceDir + "Report"));
-            var font = UiFont.Load(ui);
-            if (font != null) _doc.rootVisualElement.style.unityFontDefinition = FontDefinition.FromSDFFont(font);
             _outcome = _root.Q<Label>("outcome");
             _score = _root.Q<Label>("score");
             _meta = _root.Q<Label>("meta");

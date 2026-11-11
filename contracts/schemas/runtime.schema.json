@@ -731,7 +731,12 @@
         "reference_resolution",
         "grades",
         "timeline_max_c",
-        "npc_results"
+        "npc_results",
+        "line_s",
+        "prompts",
+        "items",
+        "towel_states",
+        "endings"
       ],
       "properties": {
         "font_file": {
@@ -802,6 +807,118 @@
               "type": "string"
             },
             "remained": {
+              "type": "string"
+            }
+          }
+        },
+        "line_s": {
+          "$ref": "#/$defs/pos",
+          "description": "a dialogue line without choices stays this long (or until Enter/1)"
+        },
+        "prompts": {
+          "type": "object",
+          "required": [
+            "pickup",
+            "use",
+            "faucet",
+            "talk",
+            "door",
+            "fire"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "pickup": {
+              "type": "string"
+            },
+            "use": {
+              "type": "string"
+            },
+            "faucet": {
+              "type": "string"
+            },
+            "talk": {
+              "type": "string"
+            },
+            "door": {
+              "type": "string"
+            },
+            "fire": {
+              "type": "string"
+            }
+          }
+        },
+        "items": {
+          "type": "object",
+          "required": [
+            "towel",
+            "extinguisher",
+            "phone",
+            "document",
+            "bag"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "towel": {
+              "type": "string"
+            },
+            "extinguisher": {
+              "type": "string"
+            },
+            "phone": {
+              "type": "string"
+            },
+            "document": {
+              "type": "string"
+            },
+            "bag": {
+              "type": "string"
+            }
+          }
+        },
+        "towel_states": {
+          "type": "object",
+          "required": [
+            "none",
+            "dry",
+            "wet",
+            "on"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "none": {
+              "type": "string"
+            },
+            "dry": {
+              "type": "string"
+            },
+            "wet": {
+              "type": "string"
+            },
+            "on": {
+              "type": "string"
+            }
+          }
+        },
+        "endings": {
+          "type": "object",
+          "required": [
+            "escaped",
+            "rescued",
+            "failed",
+            "timeout"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "escaped": {
+              "type": "string"
+            },
+            "rescued": {
+              "type": "string"
+            },
+            "failed": {
+              "type": "string"
+            },
+            "timeout": {
               "type": "string"
             }
           }
