@@ -4,6 +4,8 @@ The smoke values here are a deterministic stand-in, not the fire engine: golden 
 test the Evaluator, which only reads the log. Positions follow the demo_3f layout so
 ZoneGraph.ExitDistance gives meaningful values.
 
+Also writes fire_demo.trace.json (contracts/tools/ref_fire.py on the demo config).
+
 Run:  uv run --project server python contracts/tools/gen_golden.py
 Stdlib only.
 """
@@ -308,6 +310,12 @@ def main() -> None:
         (OUT / f"{name}.expected.json").write_text(
             json.dumps(exp, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
         print(f"{name}: {len(run.events)} events, ends t={run.t:.1f}, outcome={run.events[-1]['data']}")
+
+    # Fire reference trace for the C# FireEngine test (Stage 1). Depends on the config, not the logs.
+    import ref_fire
+    data = ref_fire.trace(*ref_fire.load_defaults())
+    (OUT / "fire_demo.trace.json").write_text(ref_fire.trace_json(data), encoding="utf-8", newline="\n")
+    print(f"fire_demo.trace: {len(data['rows'])} rows x {len(data['zones'])} zones")
 
 
 if __name__ == "__main__":

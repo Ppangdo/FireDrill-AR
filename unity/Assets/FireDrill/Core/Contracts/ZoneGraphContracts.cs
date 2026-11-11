@@ -57,41 +57,5 @@ namespace FireDrill.Core
         public ZoneGraphException(string message) : base(message) { }
     }
 
-    /// <summary>
-    /// Spatial model shared by fire engine, evaluator and NPCs (명세서 3장, 14.2, 16.8).
-    /// Stage 0: contract only. Stage 1 implements every member.
-    /// </summary>
-    public sealed class ZoneGraph
-    {
-        public ZoneGraphData Data { get; }
-        private ZoneGraph(ZoneGraphData data) { Data = data; }
-
-        /// <summary>Parse and validate. Throws ZoneGraphException naming the bad field path.</summary>
-        public static ZoneGraph Load(string json) => throw new NotImplementedException("Stage 1");
-
-        public IReadOnlyList<Zone> Zones => Data.Zones;
-        public IReadOnlyList<Edge> Edges => Data.Edges;
-
-        public Zone Zone(string zoneId) => throw new NotImplementedException("Stage 1");
-        public IEnumerable<Edge> EdgesOf(string zoneId) => throw new NotImplementedException("Stage 1");
-        public bool IsExit(string zoneId) => throw new NotImplementedException("Stage 1");
-
-        /// <summary>Zone whose floor polygon contains pos (x, z), or null.</summary>
-        public string ZoneAt(Vec3 pos) => throw new NotImplementedException("Stage 1");
-
-        public void SetBlocked(string edgeId, bool blocked) => throw new NotImplementedException("Stage 1");
-
-        /// <summary>
-        /// Continuous distance to the nearest exit (명세서 16.8): 0 inside an exit zone; otherwise
-        /// min over edges e of the current zone of |pos.xz − e.center| + D(e), where D(e) is the shortest
-        /// edge-centre path from e to any edge touching an exit zone (D = 0 there). Blocked edges excluded,
-        /// closed doors passable. Null if pos is outside every zone.
-        /// Reference implementation: contracts/tools/ref_eval.py ZoneGraph.exit_distance.
-        /// </summary>
-        public float? ExitDistance(Vec3 pos) => throw new NotImplementedException("Stage 1");
-
-        /// <summary>Waypoints (edge centres, then the target) for NPC walking.</summary>
-        public IReadOnlyList<Vec3> PathToExit(Vec3 from) => throw new NotImplementedException("Stage 1");
-        public IReadOnlyList<Vec3> PathTo(Vec3 from, string zoneId) => throw new NotImplementedException("Stage 1");
-    }
+    // ZoneGraph (명세서 3장, 14.2, 16.8) is implemented in Core/Spatial/ZoneGraph.cs.
 }

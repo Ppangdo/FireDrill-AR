@@ -79,18 +79,5 @@ namespace FireDrill.Core
         public string Guideline { get; set; }
     }
 
-    /// <summary>
-    /// Pure rule-based scoring (명세서 7장). Same log → same result. Grades must match
-    /// contracts/tools/ref_eval.py and contracts/golden/*.expected.json. Stage 1 implements.
-    /// total_pct = floor(100 × Σpoints / Σmax over non-na items + 0.5), 0 if every item is na.
-    /// </summary>
-    public static class Evaluator
-    {
-        public static EvaluationResult Evaluate(IReadOnlyList<LogEvent> events, ZoneGraph graph, Scenario scenario, EvaluationConfig cfg)
-            => throw new NotImplementedException("Stage 1");
-
-        /// <summary>Offline report from evaluation.json text templates (명세서 16.12).</summary>
-        public static ReportText TemplateReport(EvaluationResult result, EvaluationConfig cfg)
-            => throw new NotImplementedException("Stage 1");
-    }
+    // Evaluator (명세서 7장, 14.2) is implemented in Core/Evaluation/Evaluator.cs.
 }

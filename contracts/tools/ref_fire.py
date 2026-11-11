@@ -120,6 +120,39 @@ def check_targets(zone_graph: dict, fire: dict, scenario: dict) -> list[str]:
     return failures
 
 
+TRACE_SECONDS = 180
+
+
+def trace(zone_graph: dict, fire: dict, scenario: dict, seconds: float = TRACE_SECONDS, every_s: float = 1.0) -> dict:
+    """Zone densities every `every_s` seconds after ignition: the C# FireEngine's comparison data.
+
+    rows[i].t = seconds since ignition; rows[i].d follows `zones` order (D before the next tick).
+    Written to contracts/golden/fire_demo.trace.json by gen_golden.py.
+    """
+    model = FireModel(zone_graph, fire, scenario)
+    zones = [z["id"] for z in zone_graph["zones"]]
+    rows = [{"t": round(t, 6), "d": [round(d[z], 6) for z in zones]} for t, d in model.run(seconds, every_s)]
+    return {
+        "schema_version": 1,
+        "description": "Reference fire model (contracts/tools/ref_fire.py) on the demo config. C# FireEngine must match each D within 0.01.",
+        "building_id": zone_graph["building_id"],
+        "scenario_id": scenario["id"],
+        "tick_s": fire["tick_s"],
+        "every_s": every_s,
+        "seconds": seconds,
+        "zones": zones,
+        "rows": rows,
+    }
+
+
+def trace_json(data: dict) -> str:
+    """Stable text form: one row per line."""
+    head = {k: v for k, v in data.items() if k != "rows"}
+    lines = json.dumps(head, ensure_ascii=False, indent=2)[:-2]
+    rows = ",\n".join("    " + json.dumps(r) for r in data["rows"])
+    return lines + ',\n  "rows": [\n' + rows + "\n  ]\n}\n"
+
+
 def load_defaults():
     def load(name):
         return json.loads((CONFIG / f"{name}.json").read_text(encoding="utf-8"))

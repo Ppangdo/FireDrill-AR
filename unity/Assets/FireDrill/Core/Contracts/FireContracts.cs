@@ -73,16 +73,5 @@ namespace FireDrill.Core
 
     public enum TowelState { None, Dry, Wet }
 
-    /// <summary>Accumulated dose. Stage 0..3, 4 = failed. Stage 1 implements.</summary>
-    public sealed class Exposure
-    {
-        public Exposure(FireConfig cfg) { }
-        public float Fed => throw new NotImplementedException("Stage 1");
-        public int Stage => throw new NotImplementedException("Stage 1");
-        public event Action<int> StageChanged;
-        public void Accumulate(float c, TowelState towel, float dt) => throw new NotImplementedException("Stage 1");
-
-        // keeps the compiler quiet until Stage 1 raises the event
-        private void RaiseStageChanged(int stage) => StageChanged?.Invoke(stage);
-    }
+    // Exposure (명세서 4장 FED) is implemented in Core/Fire/Exposure.cs.
 }
