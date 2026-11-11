@@ -17,8 +17,8 @@
 
 ```
 uv run --project server python -m pytest server/tests        # 스키마·상호 참조·표준 로그·화재 궤적 + 서버 엔드포인트 (93개)
-Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults ../out/editmode.xml   # 103개
-Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResults ../out/playmode.xml               # 9개 (실제 서버를 띄움, 스크린샷 포함)
+Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults ../out/editmode.xml   # 106개
+Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResults ../out/playmode.xml               # 13개 (실제 서버를 띄움, 스크린샷 포함)
 ```
 
 `fire.json`·`scenario.json`·`zone_graph.json`을 바꾸면 `gen_golden.py`를 다시 돌려 `fire_demo.trace.json`을 갱신한다 (CI가 차이를 잡는다). C# 테스트 `FireEngineTests.MatchesReferenceModel_180s`가 이 파일과 비교한다.
@@ -86,6 +86,19 @@ Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResult
 - **자막·UI**: 아직 `DebugOverlay`(자막·인벤토리·NPC 선택지·결말의 연기 농도). 한글은 시스템 글꼴 대체로 그린다. 화재 중 게이지는 없다.
 - **스크린샷**: `out/screenshots/stage4/` — 발화 80초, 중간 복도 서서/낮춰서, 불난 창고, 남쪽 복도, 전체. 불 파티클 모양은 8단계 에셋 단계에서 다듬는다.
 
+## 5단계(리포트) 구현 메모
+
+명세서에 정해져 있지 않아 구현에서 고른 것. 코드는 `Runtime/Report/ReportController.cs`, `Runtime/UI/`, 화면 파일은 `UI/Resources/FireDrillUI/`(UXML·USS·테마), 테스트는 `Tests/PlayMode/ReportTests.cs`, `Tests/EditMode/ReportControllerTests.cs`.
+
+- **흐름**: RUN_END에서 Evaluator 결과로 `/finish`를 보내고, 같은 결과로 `ReportController.Start` → 문장 틀(`Evaluator.TemplateReport`)을 바로 만들고 `/runs/{id}/report`를 요청한다. Report 상태(결말 연출 `ending_s` 3초 뒤)에서 화면을 띄우고, 서버 문장이 `network.report_timeout_s`(10초) 안에 오고 항목 id 집합이 같으면 문장만 바꾼다. 점수·등급·표는 처음부터 규칙 결과 그대로다. 오프라인·로컬 run·실패·시간 초과면 문장 틀을 유지한다. 중단(Aborted) run은 리포트를 만들지 않는다.
+- **출처 표시**: 화면 위쪽 작은 글씨로 "AI가 다듬은 문장(모델)" / "기본 문장(평가 기준표)" / 대기 중. 서버가 대체 문장을 보낸 경우(`fallback_used`)도 기본 문장으로 표시.
+- **화면(16.11)**: 결말(색)·총점·시도 번호·걸린 시간 / 요약 / 머리 높이 c 타임라인(Painter2D 선, 구역 이동 세로선과 구역 이름, 발화 시각 주황선) / 항목표(이름·등급·잘한 점 또는 고칠 점·행동요령; MVP 밖이면서 해당 없음인 항목은 숨김) / NPC 결과(6단계까지 "6단계에서 표시") / 다시 하기·종료. 두 번째 시도부터 "대피 개시까지 지난 시도 → 이번"과 총점 변화를 보여 준다(16.13).
+- **글꼴(사람 결정 2026-11-11)**: `Assets/FireDrill/Fonts/{ui.font_file}`(빌드는 StreamingAssets로 복사)에서 실행 시 동적 FontAsset을 만들고, 파일이 없으면 경고 후 OS 글꼴 `ui.fallback_os_font`(맑은 고딕)을 쓴다. 16.1의 "없으면 에러 화면" 대신.
+- **UI 파일 위치**: UXML·USS는 실행 시 읽어야 해서 `Resources/FireDrillUI/`에 둔다. PanelSettings는 코드로 만들고 테마는 `FireDrillTheme.tss`(Unity 기본 런타임 테마 import).
+- **`runtime.json` 추가**: `network.report_timeout_s`, `ui`(글꼴 파일·대체 글꼴·샘플링·아틀라스, 기준 해상도, 등급 이름, 타임라인 최대 c). `Evaluator.OutcomeName`을 공개해 결말 이름은 한 곳에서만 정한다.
+- **스크린샷**: `out/screenshots/stage5/report_online.png`, `report_offline.png`(UI 패널을 RenderTexture로 그려 저장).
+- **테스트**: 온라인(가짜 LLM) 문장이 10초 안에 교체, 실행 중 서버를 꺼도(감시로 잠시 멈췄다가 오프라인 전환 후 계속) 문장 틀 리포트, 처음부터 오프라인, 응답 없는 서버에 대한 클라이언트 마감(테스트는 1초로 줄여 확인).
+
 ## 명세서 반영 대기
 
 1. **14.6 요원 화면 보조 엔드포인트**: `GET /staff/devices` → `{schema_version, devices: [{device_id, connected, status: WsStatus|null, status_age_s}]}`. 요원 화면이 1초마다 읽는다. 9·14.6 표에 추가하면 된다.
@@ -98,6 +111,9 @@ Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResult
 8. **15장 4단계 행**: 가짜 구현 "NPC 없음" → "NPC는 서 있는 자리표시(대화 선택·NPC_INTERACT만)". 통과 조건은 `npc_results`를 빼고 확인한다는 것.
 9. **16.13 모범 플레이 동선**: 302호 문을 닫고 나오기, 중간 복도에서 낮은 자세로 준호 설득(연기 속에 머무름)을 넣었다는 것.
 10. **14.5 `runtime.json` 내용**: 4단계 항목(아이템·효과·자막·소리 대체) 추가.
+11. **16.1 글꼴**: "없으면 에러 화면" → "없으면 경고 후 OS 글꼴(맑은 고딕)". 시연 전에는 `NotoSansKR-Regular.ttf`를 넣는다.
+12. **16.11 UI 파일 위치**: UXML·USS는 `Assets/FireDrill/UI/Resources/FireDrillUI/`.
+13. **14.5 `runtime.json` 내용**: `network.report_timeout_s`, `ui` 섹션 추가.
 
 ## 명세서 반영 완료 (2026-11-11)
 

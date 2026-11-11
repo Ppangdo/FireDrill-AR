@@ -1,0 +1,22 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!-- 16.11 Report: result and score / summary / head-height smoke timeline / item table / NPC results / buttons -->
+    <ui:VisualElement name="report-root" class="report">
+        <ui:VisualElement class="header">
+            <ui:Label name="outcome" class="outcome" />
+            <ui:Label name="score" class="score" />
+            <ui:Label name="meta" class="meta" />
+        </ui:VisualElement>
+        <ui:Label name="summary" class="summary" />
+        <ui:Label name="source" class="source" />
+        <ui:Label name="compare" class="compare" />
+        <ui:Label text="머리 높이의 연기 농도" class="section-title" />
+        <ui:VisualElement name="timeline" class="timeline" />
+        <ui:Label text="항목별 결과" class="section-title" />
+        <ui:ScrollView name="items" class="items" />
+        <ui:Label name="npc" class="npc" />
+        <ui:VisualElement class="buttons">
+            <ui:Button name="retry" text="다시 하기" class="button primary" />
+            <ui:Button name="quit" text="종료" class="button" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

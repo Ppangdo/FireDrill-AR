@@ -1,0 +1,35 @@
+/* 16.11 report screen. Sizes are in reference pixels (runtime.json ui.reference_resolution). */
+.report {
+    position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+    padding: 28px 48px;
+    background-color: rgba(18, 20, 24, 0.94);
+    color: rgb(235, 237, 240);
+    font-size: 20px;
+}
+.header { flex-direction: row; align-items: flex-end; margin-bottom: 10px; }
+.outcome { font-size: 44px; -unity-font-style: bold; margin-right: 28px; }
+.outcome.escaped, .outcome.rescued { color: rgb(110, 214, 140); }
+.outcome.failed, .outcome.timeout, .outcome.aborted { color: rgb(255, 128, 110); }
+.score { font-size: 44px; margin-right: 28px; }
+.meta { font-size: 20px; color: rgb(170, 176, 186); margin-bottom: 6px; }
+.summary { white-space: normal; font-size: 22px; margin: 6px 0 4px 0; }
+.source { font-size: 15px; color: rgb(140, 146, 156); margin-bottom: 2px; }
+.compare { font-size: 18px; color: rgb(255, 214, 120); margin-bottom: 4px; }
+.section-title { font-size: 18px; color: rgb(170, 176, 186); margin-top: 10px; margin-bottom: 4px; }
+.timeline { height: 170px; background-color: rgba(255, 255, 255, 0.05); border-radius: 6px; }
+.timeline-label { position: absolute; font-size: 13px; color: rgb(190, 196, 206); }
+.items { flex-grow: 1; flex-shrink: 1; }
+.item { flex-direction: row; padding: 6px 4px; border-bottom-width: 1px; border-bottom-color: rgba(255, 255, 255, 0.08); }
+.item-name { width: 190px; font-size: 19px; -unity-font-style: bold; }
+.grade { width: 110px; font-size: 19px; -unity-font-style: bold; }
+.grade.good { color: rgb(110, 214, 140); }
+.grade.normal { color: rgb(255, 214, 120); }
+.grade.poor { color: rgb(255, 128, 110); }
+.grade.na { color: rgb(140, 146, 156); }
+.item-text { flex-grow: 1; flex-shrink: 1; }
+.item-line { white-space: normal; font-size: 18px; }
+.item-guideline { white-space: normal; font-size: 16px; color: rgb(170, 190, 220); }
+.npc { font-size: 17px; color: rgb(170, 176, 186); margin-top: 6px; }
+.buttons { flex-direction: row; justify-content: flex-end; margin-top: 10px; }
+.button { font-size: 22px; padding: 10px 28px; margin-left: 14px; border-radius: 6px; background-color: rgb(58, 62, 70); color: rgb(235, 237, 240); border-width: 0; }
+.button.primary { background-color: rgb(60, 120, 220); color: rgb(255, 255, 255); }

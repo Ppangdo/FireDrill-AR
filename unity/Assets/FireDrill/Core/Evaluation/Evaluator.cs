@@ -274,6 +274,9 @@ namespace FireDrill.Core
 
         // ── offline report (16.12) ─────────────────────────────────────────────
 
+        /// <summary>Korean outcome name used by the summary template and the report screen.</summary>
+        public static string OutcomeName(Outcome outcome) => OutcomeKo[outcome];
+
         private static readonly Dictionary<Outcome, string> OutcomeKo = new Dictionary<Outcome, string>
         {
             [Outcome.Escaped] = "탈출 성공",
