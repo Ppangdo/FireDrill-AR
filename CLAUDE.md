@@ -35,9 +35,11 @@ Unity 경로: `C:\Program Files\Unity\Hub\Editor\6000.6.8f1\Editor\Unity.exe` (�
 | --- | --- |
 | 컴파일 확인 | `Unity -batchmode -quit -nographics -projectPath unity -logFile out/compile.log` 후 로그에서 `error CS` 검색 |
 | EditMode 테스트 | `Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults ../out/editmode.xml -logFile out/editmode.log` (`-testResults`는 `unity/` 기준 경로) |
-| 계약 검증(Python) | `uv run --project server python -m pytest server/tests` |
+| 계약·서버 테스트(Python) | `uv run --project server python -m pytest server/tests` |
 | 표준 로그 재생성 | `uv run --project server python contracts/tools/gen_golden.py` |
 | 참조 평가기 | `uv run --project server python contracts/tools/ref_eval.py` |
+| 서버 실행 | `uv run --project server python -m uvicorn app.main:app --app-dir server --host 0.0.0.0 --port 8000 --ws wsproto` (설정은 `server/.env`, 예시 `server/.env.example`) |
+| 요원 화면 | 브라우저로 `http://<노트북 IP>:8000/staff?token=<DEVICE_TOKENS의 토큰>` |
 
 GitHub Actions(`.github/workflows/contracts.yml`)가 PR과 main push마다 표준 로그 재생성 일치 여부와 Python 계약 테스트를 돌린다. Unity 테스트는 CI에 없으니 로컬에서 돌린다.
 
