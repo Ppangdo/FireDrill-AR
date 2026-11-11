@@ -36,3 +36,7 @@ server/*.sqlite
 
 # ---- Local outputs (logs, test results, screenshots) ----
 out/
+
+# Build-time copy made by FireDrill.Editor.Build.Pc (never commit)
+unity/Assets/StreamingAssets/
+unity/Assets/StreamingAssets.meta
