@@ -39,6 +39,8 @@ Unity 경로: `C:\Program Files\Unity\Hub\Editor\6000.6.8f1\Editor\Unity.exe` (�
 | 표준 로그 재생성 | `uv run --project server python contracts/tools/gen_golden.py` |
 | 참조 평가기 | `uv run --project server python contracts/tools/ref_eval.py` |
 
+GitHub Actions(`.github/workflows/contracts.yml`)가 PR과 main push마다 표준 로그 재생성 일치 여부와 Python 계약 테스트를 돌린다. Unity 테스트는 CI에 없으니 로컬에서 돌린다.
+
 Unity 에디터가 같은 프로젝트를 열고 있으면 batchmode가 실패한다. 사람에게 에디터를 닫아 달라고 한다.
 
 ## 이 PC의 제약 (Windows 스마트 앱 컨트롤)

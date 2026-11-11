@@ -1,0 +1,30 @@
+name: contracts
+
+# Python contract tests (명세서 15장 0단계 통과 조건).
+# Unity EditMode tests need a Unity license and run locally only (see CLAUDE.md).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies (Python 3.12)
+        run: uv sync --project server --python 3.12
+
+      - name: Golden logs are up to date
+        run: |
+          uv run --project server --python 3.12 python contracts/tools/gen_golden.py
+          git diff --exit-code -- contracts/golden
+
+      - name: Contract tests
+        run: uv run --project server --python 3.12 python -m pytest server/tests -q
