@@ -170,7 +170,8 @@
     "offline_probe_s": 10,
     "ws_status_interval_s": 1,
     "ws_ping_timeout_s": 5,
-    "ws_reconnect_s": 2
+    "ws_reconnect_s": 2,
+    "report_timeout_s": 10
   },
   "items": {
     "bag_slots": 2,
@@ -263,5 +264,22 @@
     "crackle_volume": 0.5,
     "hiss_s": 0.4,
     "spray_volume": 0.4
+  },
+  "ui": {
+    "font_file": "NotoSansKR-Regular.ttf",
+    "fallback_os_font": "Malgun Gothic",
+    "font_sampling_pt": 90,
+    "font_atlas_px": 1024,
+    "reference_resolution": [
+      1920,
+      1080
+    ],
+    "grades": {
+      "good": "좋음",
+      "normal": "보통",
+      "poor": "미흡",
+      "na": "해당 없음"
+    },
+    "timeline_max_c": 1.0
   }
 }

@@ -43,6 +43,8 @@ namespace FireDrill.Runtime
         public FireVfx FireView { get; private set; }
         public BodyEffects Body { get; private set; }
         public AudioFx Audio { get; private set; }
+        public ReportController Report { get; private set; }
+        public ReportView ReportScreen { get; private set; }
         /// <summary>Current one-line subtitle and when it disappears (realtime).</summary>
         public string Subtitle { get; private set; }
         private float _subtitleUntil;
@@ -97,6 +99,7 @@ namespace FireDrill.Runtime
             Npcs = new NpcStubs(Config.Scenario, Config.Dialogue, rt, Recorder, Platform.Rig, Flow, Platform.Input, transform);
             Exposure = new PlayerExposure(Config.Fire, Fire, Platform.Rig, Items.Inventory, Recorder, Flow);
             BuildEffects(engine, rt);
+            BuildReport();
             Platform.ChoiceKey += i => Npcs.ChooseIndex(i);
 
             Recorder.Appended += Server.Enqueue;
@@ -163,6 +166,32 @@ namespace FireDrill.Runtime
             Flow.PausedChanged += paused => SetEffects(!paused);
         }
 
+        private void BuildReport()
+        {
+            Report = new ReportController(Config.Evaluation, Server);
+            var go = new GameObject("ReportView");
+            go.transform.SetParent(transform, false);
+            ReportScreen = go.AddComponent<ReportView>();
+            ReportScreen.Init(Config);
+            Report.Changed += ReportScreen.OnModelChanged;
+            ReportScreen.RetryClicked += () => Flow.Retry();
+            ReportScreen.QuitClicked += Quit;
+            Flow.StateChanged += (from, to) =>
+            {
+                if (to == FlowState.Report && Report.Current != null) ReportScreen.Show(Report.Current);
+                else if (from == FlowState.Report || to == FlowState.Aborted) ReportScreen.Hide();
+            };
+        }
+
+        public static void Quit()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
         /// <summary>Aborted or paused: every effect off (명세서 5장, 10장).</summary>
         private void SetEffects(bool on)
         {
@@ -219,6 +248,8 @@ namespace FireDrill.Runtime
             {
                 LastEvaluation = Evaluator.Evaluate(events, Config.Graph, Config.Scenario, Config.Evaluation);
                 Server.Finish(runId, LastEvaluation.Outcome, LastEvaluation);
+                // Report: score and template now, server sentences when they arrive (명세서 8장). No report after an abort.
+                if (LastEvaluation.Outcome != Outcome.Aborted) Report.Start(runId, Flow.Attempt, LastEvaluation, Flow.FireT);
             }
             catch (Exception e)
             {

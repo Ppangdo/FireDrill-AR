@@ -29,6 +29,7 @@ namespace FireDrill.Runtime
             }
             var flow = _boot.Flow;
             if (flow == null) return;
+            if (_boot.ReportScreen != null && _boot.ReportScreen.Visible) return; // the report screen has its own buttons
 
             var sb = new StringBuilder();
             sb.AppendLine($"State {flow.State}{(flow.Paused ? "  [PAUSED: server silent]" : "")}   run t {flow.T:0.0}s   attempt {flow.Attempt}");
@@ -74,7 +75,8 @@ namespace FireDrill.Runtime
                 GUILayout.EndArea();
             }
 
-            if (flow.State == FlowState.Ending || flow.State == FlowState.Report || flow.State == FlowState.Aborted)
+            bool reportShown = _boot.ReportScreen != null && _boot.ReportScreen.Visible;
+            if (!reportShown && (flow.State == FlowState.Ending || flow.State == FlowState.Report || flow.State == FlowState.Aborted))
             {
                 var ev = _boot.LastEvaluation;
                 var text = $"Outcome {flow.LastOutcome?.ToString() ?? "-"}";
@@ -84,18 +86,9 @@ namespace FireDrill.Runtime
                 GUILayout.BeginArea(new Rect(Screen.width / 2f - 260, Screen.height / 2f - 70, 520, 140), GUI.skin.box);
                 GUILayout.Label(text);
                 if (flow.State == FlowState.Report && GUILayout.Button("Retry (new run)")) flow.Retry();
-                if ((flow.State == FlowState.Report || flow.State == FlowState.Aborted) && GUILayout.Button("Quit")) Quit();
+                if ((flow.State == FlowState.Report || flow.State == FlowState.Aborted) && GUILayout.Button("Quit")) Bootstrap.Quit();
                 GUILayout.EndArea();
             }
-        }
-
-        private static void Quit()
-        {
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
         }
     }
 }

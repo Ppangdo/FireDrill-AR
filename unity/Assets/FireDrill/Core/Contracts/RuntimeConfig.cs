@@ -14,6 +14,7 @@ namespace FireDrill.Core
         public ItemSettings Items { get; set; }
         public EffectSettings Effects { get; set; }
         public AudioSettings Audio { get; set; }
+        public UiSettings Ui { get; set; }
 
         public sealed class PcControls
         {
@@ -84,6 +85,7 @@ namespace FireDrill.Core
             public float WsStatusIntervalS { get; set; }
             public float WsPingTimeoutS { get; set; }
             public float WsReconnectS { get; set; }
+            public float ReportTimeoutS { get; set; }
         }
 
         public sealed class ItemSettings
@@ -176,6 +178,18 @@ namespace FireDrill.Core
             public float CrackleVolume { get; set; }
             public float HissS { get; set; }
             public float SprayVolume { get; set; }
+        }
+
+        /// <summary>16.11 UI Toolkit screens: font (file, else the OS fallback) and labels.</summary>
+        public sealed class UiSettings
+        {
+            public string FontFile { get; set; }
+            public string FallbackOsFont { get; set; }
+            public int FontSamplingPt { get; set; }
+            public int FontAtlasPx { get; set; }
+            public int[] ReferenceResolution { get; set; }
+            public Dictionary<string, string> Grades { get; set; }
+            public float TimelineMaxC { get; set; }
         }
     }
 }

@@ -154,6 +154,18 @@ namespace FireDrill.Runtime
             Flush();
         }
 
+        /// <summary>POST /runs/{id}/report (명세서 8장, 14.6). <paramref name="done"/> gets the server reply, or null
+        /// when offline, the run is local, the request fails or report_timeout_s passes (the caller keeps its template).</summary>
+        public void RequestReport(string runId, EvaluationResult evaluation, Action<ReportResponse, string> done)
+        {
+            if (!Online || _localRuns.Contains(runId)) { done(null, Online ? "local run" : "offline"); return; }
+            var body = new ReportRequest { Evaluation = evaluation };
+            Send<ReportResponse>(HttpMethod.Post, $"runs/{runId}/report", body,
+                                 (ok, res, err, status) => done(ok ? res : null, err), _net.ReportTimeoutS);
+        }
+
+        public bool IsLocalRun(string runId) => _localRuns.Contains(runId);
+
         // ---- main-thread pump ----------------------------------------------
 
         /// <summary>Call every frame with unscaled delta time.</summary>
@@ -375,10 +387,12 @@ namespace FireDrill.Runtime
         private void Send<T>(HttpMethod method, string path, object body, Action<bool, T, string> done) =>
             Send<T>(method, path, body, (ok, res, err, status) => done(ok, res, err));
 
-        private void Send<T>(HttpMethod method, string path, object body, Action<bool, T, string, int> done)
+        private void Send<T>(HttpMethod method, string path, object body, Action<bool, T, string, int> done, float timeoutS = 0f)
         {
             _ = Task.Run(async () =>
             {
+                using var deadline = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
+                if (timeoutS > 0f) deadline.CancelAfter(TimeSpan.FromSeconds(timeoutS));
                 bool ok = false;
                 T res = default;
                 string err = null;
@@ -387,7 +401,7 @@ namespace FireDrill.Runtime
                 {
                     var req = new HttpRequestMessage(method, path);
                     if (body != null) req.Content = new StringContent(FireDrillJson.Serialize(body), Encoding.UTF8, "application/json");
-                    using (var resp = await _http.SendAsync(req, _cts.Token))
+                    using (var resp = await _http.SendAsync(req, deadline.Token))
                     {
                         status = (int)resp.StatusCode;
                         var text = await resp.Content.ReadAsStringAsync();
@@ -399,6 +413,7 @@ namespace FireDrill.Runtime
                         else err = $"{status} {text}";
                     }
                 }
+                catch (OperationCanceledException) when (!_cts.IsCancellationRequested) { err = $"timeout after {timeoutS}s"; }
                 catch (Exception e) { err = e.GetType().Name + ": " + e.Message; }
                 _main.Enqueue(() => done(ok, res, err, status));
             });

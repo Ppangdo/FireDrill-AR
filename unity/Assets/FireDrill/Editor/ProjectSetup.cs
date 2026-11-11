@@ -108,6 +108,13 @@ namespace FireDrill.Editor
             Directory.CreateDirectory(streaming);
             foreach (var f in Directory.GetFiles("Assets/FireDrill/Config", "*.json"))
                 File.Copy(f, Path.Combine(streaming, Path.GetFileName(f)), true);
+            if (Directory.Exists("Assets/FireDrill/Fonts"))
+            {
+                var fonts = "Assets/StreamingAssets/FireDrill/Fonts";
+                Directory.CreateDirectory(fonts);
+                foreach (var f in Directory.GetFiles("Assets/FireDrill/Fonts", "*.ttf"))
+                    File.Copy(f, Path.Combine(fonts, Path.GetFileName(f)), true);
+            }
             AssetDatabase.Refresh();
             try
             {

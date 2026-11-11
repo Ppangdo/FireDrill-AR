@@ -11,7 +11,8 @@
     "network",
     "items",
     "effects",
-    "audio"
+    "audio",
+    "ui"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -335,7 +336,8 @@
         "offline_probe_s",
         "ws_status_interval_s",
         "ws_ping_timeout_s",
-        "ws_reconnect_s"
+        "ws_reconnect_s",
+        "report_timeout_s"
       ],
       "additionalProperties": false,
       "properties": {
@@ -367,6 +369,10 @@
         },
         "ws_reconnect_s": {
           "$ref": "#/$defs/pos"
+        },
+        "report_timeout_s": {
+          "$ref": "#/$defs/pos",
+          "description": "client wait for /runs/{id}/report before keeping the template (명세서 8장 10초)"
         }
       }
     },
@@ -704,6 +710,74 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "description": "16.11 UI Toolkit screens",
+      "additionalProperties": false,
+      "required": [
+        "font_file",
+        "fallback_os_font",
+        "font_sampling_pt",
+        "font_atlas_px",
+        "reference_resolution",
+        "grades",
+        "timeline_max_c"
+      ],
+      "properties": {
+        "font_file": {
+          "type": "string",
+          "description": "in Assets/FireDrill/Fonts (StreamingAssets/FireDrill/Fonts in builds)"
+        },
+        "fallback_os_font": {
+          "type": "string",
+          "description": "used with a warning when font_file is missing (사람 결정 2026-11-11)"
+        },
+        "font_sampling_pt": {
+          "type": "integer",
+          "minimum": 8
+        },
+        "font_atlas_px": {
+          "type": "integer",
+          "minimum": 256
+        },
+        "reference_resolution": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "grades": {
+          "type": "object",
+          "required": [
+            "good",
+            "normal",
+            "poor",
+            "na"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "good": {
+              "type": "string"
+            },
+            "normal": {
+              "type": "string"
+            },
+            "poor": {
+              "type": "string"
+            },
+            "na": {
+              "type": "string"
+            }
+          }
+        },
+        "timeline_max_c": {
+          "$ref": "#/$defs/pos"
         }
       }
     }
