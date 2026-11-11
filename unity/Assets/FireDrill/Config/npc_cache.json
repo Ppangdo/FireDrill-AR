@@ -1,19 +1,977 @@
 {
-  "schema_version": 1,
-  "model": "placeholder",
-  "generated_at": "2026-11-11",
-  "entries": {
-    "npc_minji|warn|1|freeze": {"action": "evacuate", "line": "네, 네! 바로 나갈게요!", "emotion": "scared"},
-    "npc_minji|warn|2|freeze": {"action": "follow_player", "line": "선배, 저 따라갈게요!", "emotion": "panicked"},
-    "npc_minji|escort|1|freeze": {"action": "follow_player", "line": "고마워요, 같이 가요.", "emotion": "relieved"},
-    "npc_minji|escort|2|freeze": {"action": "follow_player", "line": "선배만 따라갈게요.", "emotion": "scared"},
-    "npc_junho|warn|1|go_elevator": {"action": "evacuate", "line": "아, 맞다. 계단으로 갈게!", "emotion": "calm"},
-    "npc_junho|warn|2|go_elevator": {"action": "evacuate", "line": "알겠어, 계단으로 가자!", "emotion": "scared"},
-    "npc_junho|escort|1|go_elevator": {"action": "follow_player", "line": "그래, 같이 가.", "emotion": "calm"},
-    "npc_junho|escort|2|go_elevator": {"action": "follow_player", "line": "알았어, 너 따라갈게.", "emotion": "scared"}
+ "schema_version": 1,
+ "model": "fake (+ earlier entries)",
+ "generated_at": "2026-11-11",
+ "entries": {
+  "npc_junho|escort|0|ask_help": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
   },
-  "fallback": {
-    "npc_minji": ["무서워요…", "어떡하죠…"],
-    "npc_junho": ["엘리베이터 타면 빠르잖아!", "금방 올 거야."]
+  "npc_junho|escort|0|evacuate": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|0|follow_player": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|0|freeze": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|0|go_elevator": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|0|hide": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|1|ask_help": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|1|evacuate": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|1|follow_player": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|1|freeze": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|1|go_elevator": {
+   "action": "follow_player",
+   "line": "그래, 같이 가.",
+   "emotion": "calm"
+  },
+  "npc_junho|escort|1|hide": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|2|ask_help": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|2|evacuate": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|2|follow_player": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|2|freeze": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|2|go_elevator": {
+   "action": "follow_player",
+   "line": "알았어, 너 따라갈게.",
+   "emotion": "scared"
+  },
+  "npc_junho|escort|2|hide": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|3|ask_help": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|3|evacuate": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|3|follow_player": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|3|freeze": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|3|go_elevator": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|escort|3|hide": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|ignore|0|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|0|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|0|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|0|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|0|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|0|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|1|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|1|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|1|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|1|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|1|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|1|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|2|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|2|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|2|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|2|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|2|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|2|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|3|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|3|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|3|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|3|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|3|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|ignore|3|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|0|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|0|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|0|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|0|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|0|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|0|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|1|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|1|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|1|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|1|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|1|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|1|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|2|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|2|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|2|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|2|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|2|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|2|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|3|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|3|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|3|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|3|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|3|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|none|3|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_junho|warn|0|ask_help": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|0|evacuate": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|0|follow_player": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|0|freeze": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|0|go_elevator": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|0|hide": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|1|ask_help": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|1|evacuate": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|1|follow_player": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|1|freeze": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|1|go_elevator": {
+   "action": "evacuate",
+   "line": "아, 맞다. 계단으로 갈게!",
+   "emotion": "calm"
+  },
+  "npc_junho|warn|1|hide": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|2|ask_help": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|2|evacuate": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|2|follow_player": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|2|freeze": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|2|go_elevator": {
+   "action": "evacuate",
+   "line": "알겠어, 계단으로 가자!",
+   "emotion": "scared"
+  },
+  "npc_junho|warn|2|hide": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|3|ask_help": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|3|evacuate": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|3|follow_player": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|3|freeze": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|3|go_elevator": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_junho|warn|3|hide": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|0|ask_help": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|0|evacuate": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|0|follow_player": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|0|freeze": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|0|go_elevator": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|0|hide": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|1|ask_help": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|1|evacuate": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|1|follow_player": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|1|freeze": {
+   "action": "follow_player",
+   "line": "고마워요, 같이 가요.",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|1|go_elevator": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|1|hide": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|2|ask_help": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|2|evacuate": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|2|follow_player": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|2|freeze": {
+   "action": "follow_player",
+   "line": "선배만 따라갈게요.",
+   "emotion": "scared"
+  },
+  "npc_minji|escort|2|go_elevator": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|2|hide": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|3|ask_help": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|3|evacuate": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|3|follow_player": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|3|freeze": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|3|go_elevator": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|escort|3|hide": {
+   "action": "follow_player",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|ignore|0|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|0|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|0|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|0|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|0|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|0|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|1|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|1|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|1|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|1|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|1|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|1|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|2|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|2|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|2|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|2|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|2|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|2|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|3|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|3|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|3|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|3|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|3|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|ignore|3|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|0|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|0|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|0|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|0|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|0|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|0|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|1|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|1|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|1|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|1|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|1|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|1|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|2|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|2|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|2|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|2|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|2|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|2|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|3|ask_help": {
+   "action": "ask_help",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|3|evacuate": {
+   "action": "evacuate",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|3|follow_player": {
+   "action": "follow_player",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|3|freeze": {
+   "action": "freeze",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|3|go_elevator": {
+   "action": "go_elevator",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|none|3|hide": {
+   "action": "hide",
+   "line": "어떡하지…",
+   "emotion": "scared"
+  },
+  "npc_minji|warn|0|ask_help": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|0|evacuate": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|0|follow_player": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|0|freeze": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|0|go_elevator": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|0|hide": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|1|ask_help": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|1|evacuate": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|1|follow_player": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|1|freeze": {
+   "action": "evacuate",
+   "line": "네, 네! 바로 나갈게요!",
+   "emotion": "scared"
+  },
+  "npc_minji|warn|1|go_elevator": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|1|hide": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|2|ask_help": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|2|evacuate": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|2|follow_player": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|2|freeze": {
+   "action": "follow_player",
+   "line": "선배, 저 따라갈게요!",
+   "emotion": "panicked"
+  },
+  "npc_minji|warn|2|go_elevator": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|2|hide": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|3|ask_help": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|3|evacuate": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|3|follow_player": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|3|freeze": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|3|go_elevator": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
+  },
+  "npc_minji|warn|3|hide": {
+   "action": "evacuate",
+   "line": "네, 같이 나가요!",
+   "emotion": "relieved"
   }
+ },
+ "fallback": {
+  "npc_minji": [
+   "무서워요…",
+   "어떡하죠…"
+  ],
+  "npc_junho": [
+   "엘리베이터 타면 빠르잖아!",
+   "금방 올 거야."
+  ]
+ }
 }

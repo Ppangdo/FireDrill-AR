@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FireDrill.Core;
 using UnityEngine;
 
@@ -37,7 +38,7 @@ namespace FireDrill.Runtime
         public FireDirector Fire { get; private set; }
         public DoorInteractions Doors { get; private set; }
         public ItemInteractions Items { get; private set; }
-        public NpcStubs Npcs { get; private set; }
+        public NpcDirector Npcs { get; private set; }
         public PlayerExposure Exposure { get; private set; }
         public SmokeRenderer Smoke { get; private set; }
         public FireVfx FireView { get; private set; }
@@ -96,7 +97,9 @@ namespace FireDrill.Runtime
                                          Platform.Input, Config.Evaluation);
             Items = new ItemInteractions(Building, Config.Graph, Config.Scenario, Config.Fire, rt, Fire, Recorder, Platform.Rig,
                                          Flow, Platform.Input);
-            Npcs = new NpcStubs(Config.Scenario, Config.Dialogue, rt, Recorder, Platform.Rig, Flow, Platform.Input, transform);
+            var brain = new NpcBrain(Config.NpcCache, Server);
+            Npcs = new NpcDirector(Config, engine, Doors, brain, Recorder, Platform.Rig, Flow, Fire, Platform.Input, transform);
+            Npcs.Said += (npc, line) => Say($"{npc.Name}: {line}");
             Exposure = new PlayerExposure(Config.Fire, Fire, Platform.Rig, Items.Inventory, Recorder, Flow);
             BuildEffects(engine, rt);
             BuildReport();
@@ -249,7 +252,12 @@ namespace FireDrill.Runtime
                 LastEvaluation = Evaluator.Evaluate(events, Config.Graph, Config.Scenario, Config.Evaluation);
                 Server.Finish(runId, LastEvaluation.Outcome, LastEvaluation);
                 // Report: score and template now, server sentences when they arrive (명세서 8장). No report after an abort.
-                if (LastEvaluation.Outcome != Outcome.Aborted) Report.Start(runId, Flow.Attempt, LastEvaluation, Flow.FireT);
+                var npcResults = Npcs.FinishRun(LastEvaluation.Outcome);
+                if (LastEvaluation.Outcome != Outcome.Aborted)
+                {
+                    Report.Start(runId, Flow.Attempt, LastEvaluation, Flow.FireT);
+                    Report.Current.NpcResults = npcResults.Select(kv => (Npcs.Agents[kv.Key].Name, kv.Value)).ToList();
+                }
             }
             catch (Exception e)
             {
@@ -274,6 +282,7 @@ namespace FireDrill.Runtime
             if (_skipTutorial) { _skipTutorial = false; Flow.TutorialDone(); }
             Flow.Tick(Time.deltaTime);
             Fire.Update();
+            Npcs.Update(Time.deltaTime);
             Recorder.Update(); // ZONE_ENTER into the exit is logged before the run ends
             if (Subtitle != null && Time.realtimeSinceStartup > _subtitleUntil) Subtitle = null;
             var phase = Fire.Engine.Phase;

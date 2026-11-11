@@ -165,6 +165,8 @@ namespace FireDrill.Runtime
                     return Mathf.Approximately(_head, _headTarget);
                 case "intent":
                     if (_stepTimer < s.HoldS) return false;
+                    if (s.WantOpen.HasValue && s.Kind == "toggle_door" && _boot.Doors.IsOpen(s.Target) == s.WantOpen.Value)
+                        return true; // already as wanted (an NPC opened it)
                     IntentRaised?.Invoke(new Intent(ParseKind(s.Kind), s.Target, s.HoldS));
                     return true;
                 case "choose":

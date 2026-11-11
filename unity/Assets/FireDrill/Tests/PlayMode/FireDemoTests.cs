@@ -48,8 +48,11 @@ namespace FireDrill.Tests.PlayMode
                 var item = ev.Items.Single(i => i.Id == kv.Key);
                 Assert.AreEqual(kv.Value, item.Grade.ToString().ToLowerInvariant(), $"{kv.Key}\n{report}");
             }
-            if (expect.NpcResults != null && expect.NpcResults.Count > 0)
-                Debug.Log($"[{script}] npc_results not checked until stage 6 (NpcAgent): {string.Join(", ", expect.NpcResults)}");
+            var results = boot.Npcs.Results;
+            Debug.Log($"[{script}] npc results: {string.Join(", ", results.Select(r => r.Key + "=" + r.Value))}");
+            foreach (var kv in expect.NpcResults ?? new Dictionary<string, string>())
+                Assert.AreEqual(kv.Value, results[kv.Key].ToString().ToLowerInvariant(), $"npc_results {kv.Key}");
+            Assert.AreEqual(boot.Npcs.Results.Count, boot.Report.Current?.NpcResults.Count ?? boot.Npcs.Results.Count, "report lists every NPC");
             Assert.AreEqual(boot.Recorder.Events.Count, Harness.FileLines(boot.LastRunFile).Length);
         }
 
@@ -58,6 +61,22 @@ namespace FireDrill.Tests.PlayMode
 
         [UnityTest]
         public IEnumerator FailPlay_MatchesExpectedGrades() => PlayAndCheck("fail_play");
+
+        /// <summary>Stage 6 gate (명세서 15장), second half: Junho, whom the trainee does not warn, stays in the elevator
+        /// lobby (waiting at the button, or collapsed there). The first half — Minji follows out — is model_play's
+        /// npc_results, checked in ModelPlay_MatchesExpectedGrades.</summary>
+        [UnityTest]
+        public IEnumerator Npcs_JunhoNotWarned_StaysAtElevator()
+        {
+            var boot = Launch("fail_play", out var player);
+            yield return Harness.WaitFor(() => boot.Flow.State == FlowState.Report || player.Error != null, 240f,
+                () => $"stuck in {boot.Flow.State} t={boot.Flow.T:0.0} step {player.CurrentStep}");
+            var junho = boot.Npcs.Agents["npc_junho"];
+            Assert.AreEqual("z_elev_lobby", junho.Zone);
+            Assert.AreNotEqual(NpcResult.Rescued, boot.Npcs.Results["npc_junho"]);
+            Assert.AreEqual(NpcAction.GoElevator, junho.Action);
+            Assert.AreNotEqual(NpcResult.Rescued, boot.Npcs.Results["npc_minji"], "left frozen in the lab");
+        }
 
         [UnityTest]
         public IEnumerator Abort_TurnsEffectsOff()

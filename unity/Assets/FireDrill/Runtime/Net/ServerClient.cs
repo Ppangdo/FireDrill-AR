@@ -166,6 +166,15 @@ namespace FireDrill.Runtime
 
         public bool IsLocalRun(string runId) => _localRuns.Contains(runId);
 
+        /// <summary>POST /npc/react within npc_timeout_s (명세서 8장). null when offline, failed, late or not valid
+        /// (an action outside the action set fails to parse and counts as invalid).</summary>
+        public void ReactNpc(NpcReactRequest request, Action<NpcReactResponse, string> done)
+        {
+            if (!Online) { done(null, "offline"); return; }
+            Send<NpcReactResponse>(HttpMethod.Post, "npc/react", request,
+                                   (ok, res, err, status) => done(ok ? res : null, err), _net.NpcTimeoutS);
+        }
+
         // ---- main-thread pump ----------------------------------------------
 
         /// <summary>Call every frame with unscaled delta time.</summary>

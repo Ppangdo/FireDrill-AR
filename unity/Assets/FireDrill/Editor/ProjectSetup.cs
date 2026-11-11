@@ -57,7 +57,7 @@ namespace FireDrill.Editor
             // SceneBuilder makes materials with Shader.Find: keep those shaders in player builds.
             var graphics = new SerializedObject(AssetDatabase.LoadAssetAtPath<Object>("ProjectSettings/GraphicsSettings.asset"));
             var list = graphics.FindProperty("m_AlwaysIncludedShaders");
-            foreach (var name in new[] { "Universal Render Pipeline/Lit", "Universal Render Pipeline/Unlit", "Universal Render Pipeline/Particles/Unlit" })
+            foreach (var name in new[] { "Universal Render Pipeline/Lit", "Universal Render Pipeline/Unlit", "Universal Render Pipeline/Particles/Unlit", "GUI/Text Shader" })
             {
                 var shader = Shader.Find(name);
                 if (shader == null) { Debug.LogWarning("[FireDrill] shader not found: " + name); continue; }

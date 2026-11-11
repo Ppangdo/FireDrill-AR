@@ -15,6 +15,7 @@ namespace FireDrill.Core
         public EffectSettings Effects { get; set; }
         public AudioSettings Audio { get; set; }
         public UiSettings Ui { get; set; }
+        public NpcSettings Npc { get; set; }
 
         public sealed class PcControls
         {
@@ -86,6 +87,7 @@ namespace FireDrill.Core
             public float WsPingTimeoutS { get; set; }
             public float WsReconnectS { get; set; }
             public float ReportTimeoutS { get; set; }
+            public float NpcTimeoutS { get; set; }
         }
 
         public sealed class ItemSettings
@@ -190,6 +192,25 @@ namespace FireDrill.Core
             public int[] ReferenceResolution { get; set; }
             public Dictionary<string, string> Grades { get; set; }
             public float TimelineMaxC { get; set; }
+            public Dictionary<string, string> NpcResults { get; set; }
+        }
+
+        /// <summary>16.9 NPC behaviour.</summary>
+        public sealed class NpcSettings
+        {
+            public float WalkSpeedMps { get; set; }
+            public float HeadM { get; set; }
+            public float CrouchHeadM { get; set; }
+            public float FollowDistanceM { get; set; }
+            public float LoseDistanceM { get; set; }
+            public float DoorPauseS { get; set; }
+            public float SmokePathCost { get; set; }
+            public float IgnoreRadiusM { get; set; }
+            public float IgnoreS { get; set; }
+            public float NameTagHeightM { get; set; }
+            public float NameTagSize { get; set; }
+            public float ArriveM { get; set; }
+            public float ReplanS { get; set; }
         }
     }
 }

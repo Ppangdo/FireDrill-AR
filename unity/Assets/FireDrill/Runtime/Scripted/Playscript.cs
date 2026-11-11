@@ -25,6 +25,8 @@ namespace FireDrill.Runtime
             public string Target { get; set; }
             public float HoldS { get; set; }
             public string Intent { get; set; }
+            /// <summary>toggle_door only: skip when the door is already in this state.</summary>
+            public bool? WantOpen { get; set; }
 
             public override string ToString() => Do + (Target != null ? " " + Target : "") + (Kind != null ? " " + Kind : "")
                                                  + (Pos != null ? " [" + string.Join(", ", Pos) + "]" : "") + (Exit != null ? " " + Exit : "");

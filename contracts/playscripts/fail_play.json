@@ -10,7 +10,7 @@
     {"do": "intent", "kind": "grab", "target": "o_bag_302"},
     {"do": "wait", "seconds": 4},
     {"do": "walk_to", "pos": [2.4, 13.0]},
-    {"do": "intent", "kind": "toggle_door", "target": "e_302_door"},
+    {"do": "intent", "kind": "toggle_door", "target": "e_302_door", "want_open": true},
     {"do": "walk_to", "pos": [1.0, 13.0]},
     {"do": "walk_to", "pos": [-3.5, 12.0]},
     {"do": "intent", "kind": "use", "target": "o_elev_button"},

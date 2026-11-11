@@ -18,7 +18,7 @@
 ```
 uv run --project server python -m pytest server/tests        # 스키마·상호 참조·표준 로그·화재 궤적 + 서버 엔드포인트 (93개)
 Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults ../out/editmode.xml   # 106개
-Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResults ../out/playmode.xml               # 13개 (실제 서버를 띄움, 스크린샷 포함)
+Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResults ../out/playmode.xml               # 17개 (실제 서버를 띄움, 스크린샷 포함)
 ```
 
 `fire.json`·`scenario.json`·`zone_graph.json`을 바꾸면 `gen_golden.py`를 다시 돌려 `fire_demo.trace.json`을 갱신한다 (CI가 차이를 잡는다). C# 테스트 `FireEngineTests.MatchesReferenceModel_180s`가 이 파일과 비교한다.
@@ -99,6 +99,22 @@ Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResult
 - **스크린샷**: `out/screenshots/stage5/report_online.png`, `report_offline.png`(UI 패널을 RenderTexture로 그려 저장).
 - **테스트**: 온라인(가짜 LLM) 문장이 10초 안에 교체, 실행 중 서버를 꺼도(감시로 잠시 멈췄다가 오프라인 전환 후 계속) 문장 틀 리포트, 처음부터 오프라인, 응답 없는 서버에 대한 클라이언트 마감(테스트는 1초로 줄여 확인).
 
+## 6단계(NPC) 구현 메모
+
+명세서에 정해져 있지 않아 구현에서 고른 것. 코드는 `Runtime/Npc/`(NpcBrain·NpcAgent·NpcDirector), 캐시 생성은 `scripts/build_npc_cache.py`, 테스트는 `Tests/PlayMode/NpcBrainTests.cs`·`FireDemoTests.cs`.
+
+- **캐시(8장)**: `scripts/build_npc_cache.py`가 2명 × 4 × 4 × 6 = 192개 키를 서버의 LLM 백엔드와 같은 시스템 프롬프트로 만든다. 기본은 `fake`(키 불필요)이고 기존 항목은 남긴다. 키가 생기면 `--mode claude --overwrite`로 다시 만들고 사람이 검토해 커밋한다. 지금 `npc_cache.json`은 fake 184개 + 손으로 쓴 8개(`model: "fake (+ earlier entries)"`).
+- **NpcBrain**: ① 캐시 → ② 서버 `/npc/react`(`network.npc_timeout_s` 3초, 행동 집합 밖이면 역직렬화 실패로 거부) → ③ `fallback` 대사(돌아가며), 행동은 그대로. 대사 60자 초과는 거부. 서버가 자기 예비 대사(`source: fallback`)를 주면 클라이언트 예비 대사를 쓴다.
+- **언제 묻나**: 훈련자가 warn·escort를 고를 때(그 행동으로), 그리고 NPC 머리 높이 c의 연기 등급(0~3)이 바뀔 때(`player_action: none`). 처음 관측한 등급은 기준값으로만 쓴다. 기다리는 동안 NPC는 훈련자를 바라본다.
+- **행동(16.9)**: 행동은 발화 후(Fire 상태)부터. 이동은 `ZoneGraph.PathTo`의 문 중심 경유점을 직선으로(`npc.walk_speed_mps` 1.2). 닫힌 문은 `door_pause_s` 멈춘 뒤 열고 그대로 둔다(DOOR_OPEN 기록 없음 — 훈련자 행동이 아님). evacuate는 출구별 경로 비용 = 길이 × (1 + 3 × 구역 D)가 작은 쪽. follow_player는 훈련자와 같은 구역에서 1.5 m 안이면 멈추되 문간(문 중심 근처)에서는 멈추지 않는다. 훈련자가 낮추면 같이 낮춘다. 10 m 넘게 멀어지면 freeze. go_elevator는 버튼 앞 0.6 m. hide는 자기 방에서 문에서 가장 먼 구석으로 가 문을 닫는다. NPC는 충돌하지 않는다(트리거).
+- **지나침(6장)**: 2 m 안에 3초 이상 있다가 상호작용 없이 멀어지면 `NPC_INTERACT ignore`. 이번 run에서 이미 warn·escort한 NPC에는 남기지 않는다(따라오는 NPC에게서 멀어지는 건 무시가 아님).
+- **피해**: 훈련자와 같은 FED 식(머리 1.6 m, 낮추면 0.9 m, 수건 없음), 1.0이면 눕고 멈춘다.
+- **결과**: run 끝에 rescued(출구 구역) / collapsed / remained. **훈련자가 탈출한 순간 따라오던 NPC가 10 m 안에 있으면 rescued** — run은 훈련자가 출구에 닿는 순간 끝나서, 1.5 m 뒤의 동행자를 구하려면 이 규칙이 필요하다. 리포트에 "민지 구조됨, 준호 남음" 형태로 보인다.
+- **이름표**: TextMesh + OS 글꼴(`ui.fallback_os_font`). `GUI/Text Shader`를 빌드 포함 셰이더에 넣었다.
+- **`model_play.json` 동선 재조정**: NPC가 움직이게 되자 ① 따라오는 민지가 실습실에 남은 채 문을 닫으면 민지가 다시 열어 연기가 실습실로 빠지고, ② 준호에게 일찍 알리면 준호가 남쪽 계단 문을 열어 복도 연기가 빠졌다. 그래서 ① 복도에 나와 4초 기다린 뒤 302호 문을 닫고 ② 경보를 먼저 누른 뒤 낮은 자세로 55초 머물고, 준호에게는 떠나기 직전에 알린다. 결과: 8항목 좋음, 민지·준호 모두 구조됨.
+- **플레이 스크립트 `want_open`**: `toggle_door` 단계에 선택 필드. 문이 이미 그 상태면 건너뛴다(NPC가 먼저 연 경우). `playscript.schema.json`에 추가.
+- **`fail_play`**: 준호(무시)는 엘리베이터 로비에 남거나 쓰러지고, 민지는 실습실에서 얼어붙은 채 남는다(문이 열려 연기가 들어오면 쓰러짐).
+
 ## 명세서 반영 대기
 
 1. **14.6 요원 화면 보조 엔드포인트**: `GET /staff/devices` → `{schema_version, devices: [{device_id, connected, status: WsStatus|null, status_age_s}]}`. 요원 화면이 1초마다 읽는다. 9·14.6 표에 추가하면 된다.
@@ -114,6 +130,11 @@ Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResult
 11. **16.1 글꼴**: "없으면 에러 화면" → "없으면 경고 후 OS 글꼴(맑은 고딕)". 시연 전에는 `NotoSansKR-Regular.ttf`를 넣는다.
 12. **16.11 UI 파일 위치**: UXML·USS는 `Assets/FireDrill/UI/Resources/FireDrillUI/`.
 13. **14.5 `runtime.json` 내용**: `network.report_timeout_s`, `ui` 섹션 추가.
+14. **16.9 NPC 결과**: "탈출 순간 10 m 안에서 따라오던 NPC는 구조됨" 규칙, 문간에서 멈추지 않는 것, NPC가 연 문은 DOOR_OPEN을 남기지 않는 것.
+15. **8장 캐시 생성 위치**: `scripts/build_npc_cache.py`(fake/claude, 기존 항목 유지 옵션).
+16. **15.2 플레이 스크립트**: `toggle_door`의 `want_open` 필드.
+17. **16.13 모범 플레이 동선**: 경보 → 복도에서 낮은 자세로 머묾 → 떠나기 직전 준호에게 알림.
+18. **14.5 `runtime.json` 내용**: `npc` 섹션, `network.npc_timeout_s`, `ui.npc_results`.
 
 ## 명세서 반영 완료 (2026-11-11)
 

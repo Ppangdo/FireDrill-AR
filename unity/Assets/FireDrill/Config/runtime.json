@@ -171,7 +171,8 @@
     "ws_status_interval_s": 1,
     "ws_ping_timeout_s": 5,
     "ws_reconnect_s": 2,
-    "report_timeout_s": 10
+    "report_timeout_s": 10,
+    "npc_timeout_s": 3
   },
   "items": {
     "bag_slots": 2,
@@ -280,6 +281,26 @@
       "poor": "미흡",
       "na": "해당 없음"
     },
-    "timeline_max_c": 1.0
+    "timeline_max_c": 1.0,
+    "npc_results": {
+      "rescued": "구조됨",
+      "collapsed": "쓰러짐",
+      "remained": "남음"
+    }
+  },
+  "npc": {
+    "walk_speed_mps": 1.2,
+    "head_m": 1.6,
+    "crouch_head_m": 0.9,
+    "follow_distance_m": 1.5,
+    "lose_distance_m": 10,
+    "door_pause_s": 0.5,
+    "smoke_path_cost": 3,
+    "ignore_radius_m": 2,
+    "ignore_s": 3,
+    "name_tag_height_m": 0.35,
+    "name_tag_size": 0.08,
+    "arrive_m": 0.1,
+    "replan_s": 0.5
   }
 }
