@@ -1,0 +1,27 @@
+* text=auto
+
+# Text
+*.cs     text diff=csharp
+*.json   text
+*.jsonl  text
+*.md     text
+*.py     text
+*.uxml   text
+*.uss    text
+*.asmdef text
+*.unity  text merge=unityyamlmerge
+*.prefab text merge=unityyamlmerge
+*.asset  text merge=unityyamlmerge
+*.meta   text
+
+# Binary assets via Git LFS
+*.png filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.tga filter=lfs diff=lfs merge=lfs -text
+*.psd filter=lfs diff=lfs merge=lfs -text
+*.wav filter=lfs diff=lfs merge=lfs -text
+*.mp3 filter=lfs diff=lfs merge=lfs -text
+*.ogg filter=lfs diff=lfs merge=lfs -text
+*.fbx filter=lfs diff=lfs merge=lfs -text
+*.ttf filter=lfs diff=lfs merge=lfs -text
+*.otf filter=lfs diff=lfs merge=lfs -text

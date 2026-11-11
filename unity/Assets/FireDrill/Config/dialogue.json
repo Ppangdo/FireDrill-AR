@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "start": "intro_1",
+  "nodes": {
+    "intro_1": {
+      "speaker": "교수님(전화)",
+      "text": "아, 마침 실습실에 있구나. 301호 교탁에 서류가 있는데 좀 가져다줄래?",
+      "choices": [
+        {"text": "네, 다녀올게요.", "intent": "accept_errand", "next": "intro_2"}
+      ]
+    },
+    "intro_2": {
+      "speaker": "안내",
+      "text": "WASD로 이동, 마우스로 둘러보기, E로 줍기·사용, F로 문 열기, C로 자세 낮추기. 301호는 복도 남쪽에 있습니다.",
+      "next": null,
+      "on_end": {"quest": "fetch_document"}
+    },
+    "errand_return": {
+      "speaker": "교수님(전화)",
+      "text": "가져왔구나, 고마워. 잠깐 거기 두고 쉬고 있어.",
+      "choices": [
+        {"text": "네.", "intent": "ok", "next": null}
+      ],
+      "on_end": {"quest": "return_document", "flow": "to_prefire"}
+    },
+    "npc_minji_idle": {
+      "speaker": "민지",
+      "text": "선배, 저 과제 거의 다 했어요.",
+      "next": null
+    },
+    "npc_junho_idle": {
+      "speaker": "준호",
+      "text": "나 잠깐 내려갔다 올게.",
+      "next": null
+    },
+    "npc_minji_fire": {
+      "speaker": "민지",
+      "text": "선배… 이거 무슨 냄새죠?",
+      "choices": [
+        {"text": "불이야! 빨리 대피해!", "intent": "warn", "next": null},
+        {"text": "나랑 같이 가자.", "intent": "escort", "next": null}
+      ]
+    },
+    "npc_junho_fire": {
+      "speaker": "준호",
+      "text": "엘리베이터 금방 와. 같이 타고 내려가자!",
+      "choices": [
+        {"text": "불이야! 엘리베이터 타면 안 돼, 계단으로 가!", "intent": "warn", "next": null},
+        {"text": "나랑 같이 계단으로 가자.", "intent": "escort", "next": null}
+      ]
+    }
+  }
+}

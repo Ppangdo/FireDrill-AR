@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "log_event.schema.json",
+  "title": "One behaviour log event = one JSONL line (명세서 6장, 14.2)",
+  "type": "object",
+  "required": ["run_id", "seq", "t", "type", "zone", "pos", "head_ratio", "c_head", "fed", "zone_d", "layer_y", "data"],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {"type": "string", "minLength": 1},
+    "seq": {"type": "integer", "minimum": 1},
+    "t": {"type": "number", "minimum": 0, "description": "run time in seconds"},
+    "type": {"enum": [
+      "RUN_START", "RUN_END", "STATE_CHANGE", "CUE_EXPOSED", "ZONE_ENTER", "POSTURE", "SAMPLE",
+      "HANDLE_CHECK", "DOOR_OPEN", "DOOR_CLOSE", "ALARM_PRESSED", "SHOUT", "PICKUP", "USE",
+      "TOWEL_WET", "TOWEL_EQUIP", "EXTINGUISH", "ELEVATOR_CALL", "WINDOW_SIGNAL",
+      "NPC_INTERACT", "CROWD_FOLLOW", "BODY_STAGE", "ABORT"
+    ]},
+    "zone": {"type": ["string", "null"], "description": "zone id of the head position, null if outside every zone"},
+    "pos": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3, "description": "head position, building coordinates"},
+    "head_ratio": {"type": "number", "minimum": 0},
+    "c_head": {"type": "number", "minimum": 0, "maximum": 1},
+    "fed": {"type": "number", "minimum": 0},
+    "zone_d": {"type": "number", "minimum": 0, "maximum": 1, "description": "smoke density D of the current zone"},
+    "layer_y": {"type": "number", "description": "smoke layer bottom height of the current zone (m)"},
+    "data": {"type": "object"}
+  },
+  "allOf": [
+    {"if": {"properties": {"type": {"const": "RUN_START"}}}, "then": {"properties": {"data": {"required": ["scenario_id", "attempt"]}}}},
+    {"if": {"properties": {"type": {"const": "RUN_END"}}}, "then": {"properties": {"data": {"required": ["outcome"], "properties": {"outcome": {"enum": ["escaped", "rescued", "failed", "timeout", "aborted"]}}}}}},
+    {"if": {"properties": {"type": {"const": "STATE_CHANGE"}}}, "then": {"properties": {"data": {"required": ["from", "to"]}}}},
+    {"if": {"properties": {"type": {"const": "CUE_EXPOSED"}}}, "then": {"properties": {"data": {"required": ["cue"], "properties": {"cue": {"enum": ["sound", "smell", "smoke", "alarm"]}}}}}},
+    {"if": {"properties": {"type": {"const": "ZONE_ENTER"}}}, "then": {"properties": {"data": {"required": ["from", "to"]}}}},
+    {"if": {"properties": {"type": {"const": "POSTURE"}}}, "then": {"properties": {"data": {"required": ["low"]}}}},
+    {"if": {"properties": {"type": {"const": "HANDLE_CHECK"}}}, "then": {"properties": {"data": {"required": ["edge", "hot"]}}}},
+    {"if": {"properties": {"type": {"enum": ["DOOR_OPEN", "DOOR_CLOSE"]}}}, "then": {"properties": {"data": {"required": ["edge", "hot", "checked_before"]}}}},
+    {"if": {"properties": {"type": {"const": "SHOUT"}}}, "then": {"properties": {"data": {"required": ["method"]}}}},
+    {"if": {"properties": {"type": {"const": "PICKUP"}}}, "then": {"properties": {"data": {"required": ["item", "object", "essential"]}}}},
+    {"if": {"properties": {"type": {"const": "TOWEL_EQUIP"}}}, "then": {"properties": {"data": {"required": ["on"]}}}},
+    {"if": {"properties": {"type": {"const": "ALARM_PRESSED"}}}, "then": {"properties": {"data": {"required": ["object"]}}}},
+    {"if": {"properties": {"type": {"const": "EXTINGUISH"}}}, "then": {"properties": {"data": {"required": ["phase", "duration", "success"]}}}},
+    {"if": {"properties": {"type": {"const": "NPC_INTERACT"}}}, "then": {"properties": {"data": {"required": ["npc", "action"], "properties": {"action": {"enum": ["warn", "escort", "ignore"]}}}}}},
+    {"if": {"properties": {"type": {"const": "BODY_STAGE"}}}, "then": {"properties": {"data": {"required": ["stage"]}}}},
+    {"if": {"properties": {"type": {"const": "ABORT"}}}, "then": {"properties": {"data": {"required": ["by"]}}}}
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fire.schema.json",
+  "title": "Fire engine config (명세서 4장, 14.5)",
+  "type": "object",
+  "required": ["schema_version", "tick_s", "source_rate", "area_ref_m2", "k", "min_layer_y", "temp", "hot_door_temp_c", "below_layer_factor", "phases_s", "extinguish_needed_s", "extinguish_range_m", "fed", "render"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "tick_s": {"type": "number", "exclusiveMinimum": 0},
+    "source_rate": {"type": "number", "minimum": 0},
+    "area_ref_m2": {"type": "number", "exclusiveMinimum": 0},
+    "k": {
+      "type": "object", "required": ["door_open", "door_closed", "opening", "stair"], "additionalProperties": false,
+      "properties": {
+        "door_open": {"type": "number", "minimum": 0},
+        "door_closed": {"type": "number", "minimum": 0},
+        "opening": {"type": "number", "minimum": 0},
+        "stair": {"type": "number", "minimum": 0}
+      }
+    },
+    "min_layer_y": {"type": "number", "minimum": 0},
+    "temp": {
+      "type": "object", "required": ["base_c", "per_d_c", "origin_bonus_c"], "additionalProperties": false,
+      "properties": {"base_c": {"type": "number"}, "per_d_c": {"type": "number"}, "origin_bonus_c": {"type": "number"}}
+    },
+    "hot_door_temp_c": {"type": "number"},
+    "below_layer_factor": {"type": "number", "minimum": 0, "maximum": 1},
+    "phases_s": {
+      "type": "object", "required": ["initial_end", "growing_end"], "additionalProperties": false,
+      "properties": {"initial_end": {"type": "number"}, "growing_end": {"type": "number"}}
+    },
+    "extinguish_needed_s": {"type": "number", "exclusiveMinimum": 0},
+    "extinguish_range_m": {"type": "number", "exclusiveMinimum": 0},
+    "fed": {
+      "type": "object", "required": ["full_dose_s", "towel", "stages"], "additionalProperties": false,
+      "properties": {
+        "full_dose_s": {"type": "number", "exclusiveMinimum": 0},
+        "towel": {
+          "type": "object", "required": ["none", "dry", "wet"], "additionalProperties": false,
+          "properties": {"none": {"type": "number"}, "dry": {"type": "number"}, "wet": {"type": "number"}}
+        },
+        "stages": {"type": "array", "items": {"type": "number"}, "minItems": 4, "maxItems": 4, "description": "FED thresholds for stage 1,2,3 and failure"}
+      }
+    },
+    "render": {
+      "type": "object", "required": ["max_opacity"], "additionalProperties": false,
+      "properties": {"max_opacity": {"type": "number", "minimum": 0, "maximum": 1}}
+    }
+  }
+}

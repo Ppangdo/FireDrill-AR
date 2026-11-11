@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "playscript.schema.json",
+  "title": "ScriptedPlayer play script (명세서 15.2)",
+  "type": "object",
+  "required": ["schema_version", "name", "time_scale", "start", "steps", "expect"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "name": {"type": "string"},
+    "time_scale": {"type": "number", "exclusiveMinimum": 0},
+    "start": {"enum": ["tutorial", "prefire"], "description": "prefire = retry-style start with the document already held"},
+    "steps": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "required": ["do"],
+        "properties": {
+          "do": {"enum": ["walk_to", "walk_to_exit", "wait", "wait_for", "crouch", "intent", "choose"]},
+          "pos": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 3},
+          "exit": {"type": "string", "pattern": "^z_"},
+          "seconds": {"type": "number", "minimum": 0},
+          "event": {"type": "string"},
+          "on": {"type": "boolean"},
+          "kind": {"enum": ["use", "grab", "drop", "handle_check", "toggle_door", "talk_to", "towel_toggle", "abort"]},
+          "target": {"type": "string"},
+          "hold_s": {"type": "number", "minimum": 0},
+          "intent": {"type": "string", "description": "for choose: dialogue choice intent"}
+        },
+        "allOf": [
+          {"if": {"properties": {"do": {"const": "walk_to"}}}, "then": {"required": ["pos"]}},
+          {"if": {"properties": {"do": {"const": "walk_to_exit"}}}, "then": {"required": ["exit"]}},
+          {"if": {"properties": {"do": {"const": "wait"}}}, "then": {"required": ["seconds"]}},
+          {"if": {"properties": {"do": {"const": "wait_for"}}}, "then": {"required": ["event"]}},
+          {"if": {"properties": {"do": {"const": "crouch"}}}, "then": {"required": ["on"]}},
+          {"if": {"properties": {"do": {"const": "intent"}}}, "then": {"required": ["kind"]}},
+          {"if": {"properties": {"do": {"const": "choose"}}}, "then": {"required": ["intent"]}}
+        ]
+      }
+    },
+    "expect": {
+      "type": "object", "required": ["outcome"], "additionalProperties": false,
+      "properties": {
+        "outcome": {"enum": ["escaped", "rescued", "failed", "timeout", "aborted"]},
+        "grades": {"type": "object", "additionalProperties": {"enum": ["good", "normal", "poor", "na"]}},
+        "npc_results": {"type": "object", "additionalProperties": {"enum": ["rescued", "collapsed", "remained"]}}
+      }
+    }
+  }
+}

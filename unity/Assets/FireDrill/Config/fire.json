@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "tick_s": 0.1,
+  "source_rate": 0.012,
+  "area_ref_m2": 20,
+  "k": {"door_open": 0.15, "door_closed": 0.005, "opening": 0.25, "stair": 0.20},
+  "min_layer_y": 0.3,
+  "temp": {"base_c": 20, "per_d_c": 60, "origin_bonus_c": 200},
+  "hot_door_temp_c": 60,
+  "below_layer_factor": 0.2,
+  "phases_s": {"initial_end": 30, "growing_end": 60},
+  "extinguish_needed_s": 5,
+  "extinguish_range_m": 3,
+  "fed": {"full_dose_s": 60, "towel": {"none": 1.0, "dry": 0.8, "wet": 0.6}, "stages": [0.30, 0.60, 0.85, 1.00]},
+  "render": {"max_opacity": 0.7}
+}

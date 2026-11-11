@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "s_demo_fire",
+  "building_id": "demo_3f",
+  "player_spawn": {"pos": [6, 0, 13], "yaw": 270},
+  "retry_spawn": {"pos": [6, 0, 13], "yaw": 270},
+  "fire": {"origin_zone": "z_storage_303", "fire_at_s": 20, "retry_fire_at_s": 10},
+  "initial_doors": {"e_303_door": true},
+  "blocked_edges": [],
+  "cues": [
+    {"cue": "sound", "at_s": 0},
+    {"cue": "smell", "at_s": 5},
+    {"cue": "alarm", "at_s": 60}
+  ],
+  "npcs": [
+    {"id": "npc_minji", "name": "민지", "persona": "같은 실습실의 후배. 겁이 많아 위급하면 얼어붙는다. 선배 말은 잘 따른다.", "spawn": [8, 0, 15], "home_zone": "z_lab_302", "initial_action": "freeze"},
+    {"id": "npc_junho", "name": "준호", "persona": "동기. 급하면 엘리베이터가 빠르다고 믿는다. 직접 말해 주면 설득된다.", "spawn": [-2, 0, 12], "home_zone": "z_elev_lobby", "initial_action": "go_elevator"}
+  ],
+  "timeout_s": 240
+}

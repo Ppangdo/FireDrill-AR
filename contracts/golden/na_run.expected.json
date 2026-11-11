@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "log": "na_run.jsonl",
+  "description": "해당 없음 플레이: 남쪽 복도에서 단서 직후 바로 탈출. 연기 구간을 지나지 않음",
+  "outcome": "escaped",
+  "total_pct": 69,
+  "grades": {
+    "alert": "poor",
+    "evac_delay": "good",
+    "no_elevator": "good",
+    "door_check": "good",
+    "nose_mouth": "na",
+    "low_posture": "na",
+    "extinguish": "na",
+    "blocked_response": "na",
+    "belongings": "good",
+    "warn_others": "poor"
+  }
+}

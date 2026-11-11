@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scenario.schema.json",
+  "title": "Scenario (명세서 14.5)",
+  "type": "object",
+  "required": ["schema_version", "id", "building_id", "player_spawn", "fire", "initial_doors", "blocked_edges", "cues", "npcs", "timeout_s"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "pattern": "^s_[a-z0-9_]+$"},
+    "building_id": {"type": "string"},
+    "player_spawn": {
+      "type": "object", "required": ["pos", "yaw"], "additionalProperties": false,
+      "properties": {"pos": {"$ref": "#/$defs/vec3"}, "yaw": {"type": "number"}}
+    },
+    "retry_spawn": {
+      "type": "object", "required": ["pos", "yaw"], "additionalProperties": false,
+      "properties": {"pos": {"$ref": "#/$defs/vec3"}, "yaw": {"type": "number"}}
+    },
+    "fire": {
+      "type": "object", "required": ["origin_zone", "fire_at_s"], "additionalProperties": false,
+      "properties": {
+        "origin_zone": {"type": "string", "pattern": "^z_"},
+        "fire_at_s": {"type": "number", "minimum": 0, "description": "seconds after entering PreFire"},
+        "retry_fire_at_s": {"type": "number", "minimum": 0}
+      }
+    },
+    "initial_doors": {"type": "object", "additionalProperties": {"type": "boolean"}, "propertyNames": {"pattern": "^e_"}},
+    "blocked_edges": {"type": "array", "items": {"type": "string", "pattern": "^e_"}},
+    "cues": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["cue", "at_s"], "additionalProperties": false,
+        "properties": {"cue": {"enum": ["sound", "smell", "alarm"]}, "at_s": {"type": "number", "minimum": 0, "description": "seconds after ignition"}}
+      }
+    },
+    "npcs": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["id", "name", "persona", "spawn", "initial_action"], "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^npc_[a-z0-9_]+$"},
+          "name": {"type": "string"},
+          "persona": {"type": "string"},
+          "spawn": {"$ref": "#/$defs/vec3"},
+          "home_zone": {"type": "string", "pattern": "^z_"},
+          "initial_action": {"$ref": "#/$defs/npc_action"}
+        }
+      }
+    },
+    "timeout_s": {"type": "number", "exclusiveMinimum": 0, "description": "seconds after ignition"}
+  },
+  "$defs": {
+    "vec3": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+    "npc_action": {"enum": ["evacuate", "follow_player", "freeze", "ask_help", "go_elevator", "hide"]}
+  }
+}

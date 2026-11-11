@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "evaluation.schema.json",
+  "title": "Evaluation config (명세서 7장, 14.5)",
+  "type": "object",
+  "required": ["schema_version", "mvp_only", "grade_ratio", "standing_head_m", "posture_threshold", "summary_template", "items", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "mvp_only": {"type": "boolean", "description": "true: non-MVP items are graded na"},
+    "grade_ratio": {
+      "type": "object", "required": ["good", "normal", "poor"], "additionalProperties": false,
+      "properties": {"good": {"type": "number"}, "normal": {"type": "number"}, "poor": {"type": "number"}}
+    },
+    "standing_head_m": {"type": "number", "exclusiveMinimum": 0},
+    "posture_threshold": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+    "summary_template": {"type": "string"},
+    "items": {
+      "type": "array", "minItems": 10, "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "mvp", "weight", "thresholds", "rule_ref", "measure", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"enum": ["alert", "evac_delay", "no_elevator", "door_check", "nose_mouth", "low_posture", "extinguish", "blocked_response", "belongings", "warn_others"]},
+          "name": {"type": "string"},
+          "mvp": {"type": "boolean"},
+          "weight": {"type": "number", "minimum": 0},
+          "thresholds": {"type": "object", "additionalProperties": {"type": "number"}},
+          "rule_ref": {"type": "string"},
+          "measure": {"type": "string", "description": "exact algorithm in words; the Evaluator implements this"},
+          "text": {
+            "type": "object", "required": ["good", "improve", "guideline"], "additionalProperties": false,
+            "properties": {"good": {"type": "string"}, "improve": {"type": "string"}, "guideline": {"type": "string"}}
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object", "required": ["source", "quote"], "additionalProperties": false,
+        "properties": {"source": {"type": "string"}, "quote": {"type": "string"}, "cross_ref": {"type": "string"}}
+      }
+    }
+  }
+}
