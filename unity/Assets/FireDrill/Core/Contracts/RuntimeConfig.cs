@@ -11,6 +11,9 @@ namespace FireDrill.Core
         public SceneSettings Scene { get; set; }
         public FlowSettings Flow { get; set; }
         public NetworkSettings Network { get; set; }
+        public ItemSettings Items { get; set; }
+        public EffectSettings Effects { get; set; }
+        public AudioSettings Audio { get; set; }
 
         public sealed class PcControls
         {
@@ -26,6 +29,8 @@ namespace FireDrill.Core
             public float HandleHoldS { get; set; }
             public float FaucetHoldS { get; set; }
             public float AbortHoldS { get; set; }
+            public float TalkRangeM { get; set; }
+            public float PickupS { get; set; }
         }
 
         public sealed class SceneSettings
@@ -42,6 +47,14 @@ namespace FireDrill.Core
             public Dictionary<string, string> Colors { get; set; }
             /// <summary>Placeholder shape per object kind (snake_case kind → shape), 16.10.</summary>
             public Dictionary<string, ObjectShape> Objects { get; set; }
+            public NpcShape Npc { get; set; }
+        }
+
+        public sealed class NpcShape
+        {
+            public float HeightM { get; set; }
+            public float RadiusM { get; set; }
+            public string Color { get; set; }
         }
 
         public sealed class ObjectShape
@@ -49,6 +62,8 @@ namespace FireDrill.Core
             public string Shape { get; set; }
             public float[] SizeM { get; set; }
             public string Color { get; set; }
+            public bool Pickable { get; set; }
+            public bool Essential { get; set; }
         }
 
         public sealed class FlowSettings
@@ -69,6 +84,98 @@ namespace FireDrill.Core
             public float WsStatusIntervalS { get; set; }
             public float WsPingTimeoutS { get; set; }
             public float WsReconnectS { get; set; }
+        }
+
+        public sealed class ItemSettings
+        {
+            public int BagSlots { get; set; }
+            public float ExtinguisherCapacityS { get; set; }
+        }
+
+        /// <summary>16.4 smoke, 16.5 fire, 10장 body effects. Opacity = base + per_d × D, capped by fire.render.max_opacity.</summary>
+        public sealed class EffectSettings
+        {
+            public float SmokeCueD { get; set; }
+            public float SubtitleS { get; set; }
+            /// <summary>Subtitle text by key: sound, smell, smoke, alarm, stage_1..3, hot_handle, cool_handle.</summary>
+            public Dictionary<string, string> Subtitles { get; set; }
+            public SmokeSettings Smoke { get; set; }
+            public FogSettings Fog { get; set; }
+            public FloorLineSettings FloorLine { get; set; }
+            public FireLook Fire { get; set; }
+            public BodySettings Body { get; set; }
+        }
+
+        public sealed class SmokeSettings
+        {
+            public float BaseOpacity { get; set; }
+            public float PerDOpacity { get; set; }
+            public float EdgeFadeM { get; set; }
+            public float LerpS { get; set; }
+            public string Color { get; set; }
+        }
+
+        public sealed class FogSettings
+        {
+            public float BaseDensity { get; set; }
+            public float PerCDensity { get; set; }
+            public string Color { get; set; }
+        }
+
+        public sealed class FloorLineSettings
+        {
+            public float WidthM { get; set; }
+            public float HeightM { get; set; }
+            public string Color { get; set; }
+        }
+
+        public sealed class FireSize
+        {
+            public float DiameterM { get; set; }
+            public float HeightM { get; set; }
+        }
+
+        public sealed class FireLook
+        {
+            public FireSize Initial { get; set; }
+            public FireSize Growing { get; set; }
+            public float ExtinguishShrinkS { get; set; }
+            public float LightIntensity { get; set; }
+            public float LightRangeM { get; set; }
+            public float Flicker { get; set; }
+            public string FlameColor { get; set; }
+            public string SmokeColor { get; set; }
+            public string WhiteSmokeColor { get; set; }
+        }
+
+        public sealed class BodyStageLook
+        {
+            public float Vignette { get; set; }
+            public float Saturation { get; set; }
+            public float BlurRadius { get; set; }
+        }
+
+        public sealed class BodySettings
+        {
+            public List<BodyStageLook> Stages { get; set; }
+            public float ShakeDeg { get; set; }
+            public float ShakeHz { get; set; }
+            public float HotFlashS { get; set; }
+            public float BlurStartM { get; set; }
+            public float BlurEndM { get; set; }
+            public string HotColor { get; set; }
+        }
+
+        /// <summary>16.6 fallback sounds made in code until the .wav files arrive.</summary>
+        public sealed class AudioSettings
+        {
+            public float Volume { get; set; }
+            public float AlarmHz { get; set; }
+            public float AlarmOnS { get; set; }
+            public float AlarmOffS { get; set; }
+            public float CrackleVolume { get; set; }
+            public float HissS { get; set; }
+            public float SprayVolume { get; set; }
         }
     }
 }

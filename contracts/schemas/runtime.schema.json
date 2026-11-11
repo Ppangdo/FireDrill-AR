@@ -8,7 +8,10 @@
     "pc",
     "scene",
     "flow",
-    "network"
+    "network",
+    "items",
+    "effects",
+    "audio"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -37,7 +40,9 @@
       "required": [
         "shape",
         "size_m",
-        "color"
+        "color",
+        "pickable",
+        "essential"
       ],
       "additionalProperties": false,
       "properties": {
@@ -52,6 +57,13 @@
         },
         "color": {
           "$ref": "#/$defs/color"
+        },
+        "pickable": {
+          "type": "boolean"
+        },
+        "essential": {
+          "type": "boolean",
+          "description": "PICKUP.essential (16.10)"
         }
       }
     }
@@ -75,7 +87,9 @@
         "handle_range_m",
         "handle_hold_s",
         "faucet_hold_s",
-        "abort_hold_s"
+        "abort_hold_s",
+        "talk_range_m",
+        "pickup_s"
       ],
       "additionalProperties": false,
       "properties": {
@@ -117,6 +131,12 @@
         },
         "abort_hold_s": {
           "$ref": "#/$defs/nonneg"
+        },
+        "talk_range_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "pickup_s": {
+          "$ref": "#/$defs/nonneg"
         }
       }
     },
@@ -134,7 +154,8 @@
         "light_intensity",
         "light_range_m",
         "colors",
-        "objects"
+        "objects",
+        "npc"
       ],
       "additionalProperties": false,
       "properties": {
@@ -253,6 +274,26 @@
               "$ref": "#/$defs/shape"
             }
           }
+        },
+        "npc": {
+          "type": "object",
+          "required": [
+            "height_m",
+            "radius_m",
+            "color"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "height_m": {
+              "$ref": "#/$defs/pos"
+            },
+            "radius_m": {
+              "$ref": "#/$defs/pos"
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            }
+          }
         }
       }
     },
@@ -326,6 +367,343 @@
         },
         "ws_reconnect_s": {
           "$ref": "#/$defs/pos"
+        }
+      }
+    },
+    "items": {
+      "type": "object",
+      "required": [
+        "bag_slots",
+        "extinguisher_capacity_s"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "bag_slots": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "extinguisher_capacity_s": {
+          "$ref": "#/$defs/pos"
+        }
+      }
+    },
+    "effects": {
+      "type": "object",
+      "required": [
+        "smoke_cue_d",
+        "subtitle_s",
+        "smoke",
+        "fog",
+        "floor_line",
+        "fire",
+        "body",
+        "subtitles"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "smoke_cue_d": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "CUE_EXPOSED smoke when the trainee's zone D exceeds this (14.5)"
+        },
+        "subtitle_s": {
+          "$ref": "#/$defs/pos"
+        },
+        "smoke": {
+          "type": "object",
+          "required": [
+            "base_opacity",
+            "per_d_opacity",
+            "edge_fade_m",
+            "lerp_s",
+            "color"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "base_opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "per_d_opacity": {
+              "$ref": "#/$defs/nonneg"
+            },
+            "edge_fade_m": {
+              "$ref": "#/$defs/nonneg"
+            },
+            "lerp_s": {
+              "$ref": "#/$defs/nonneg"
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            }
+          }
+        },
+        "fog": {
+          "type": "object",
+          "required": [
+            "base_density",
+            "per_c_density",
+            "color"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "base_density": {
+              "$ref": "#/$defs/nonneg"
+            },
+            "per_c_density": {
+              "$ref": "#/$defs/nonneg"
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            }
+          }
+        },
+        "floor_line": {
+          "type": "object",
+          "required": [
+            "width_m",
+            "height_m",
+            "color"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "width_m": {
+              "$ref": "#/$defs/pos"
+            },
+            "height_m": {
+              "$ref": "#/$defs/nonneg"
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            }
+          }
+        },
+        "fire": {
+          "type": "object",
+          "required": [
+            "initial",
+            "growing",
+            "extinguish_shrink_s",
+            "light_intensity",
+            "light_range_m",
+            "flicker",
+            "flame_color",
+            "smoke_color",
+            "white_smoke_color"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "initial": {
+              "type": "object",
+              "required": [
+                "diameter_m",
+                "height_m"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "diameter_m": {
+                  "$ref": "#/$defs/pos"
+                },
+                "height_m": {
+                  "$ref": "#/$defs/pos"
+                }
+              }
+            },
+            "growing": {
+              "type": "object",
+              "required": [
+                "diameter_m",
+                "height_m"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "diameter_m": {
+                  "$ref": "#/$defs/pos"
+                },
+                "height_m": {
+                  "$ref": "#/$defs/pos"
+                }
+              }
+            },
+            "extinguish_shrink_s": {
+              "$ref": "#/$defs/nonneg"
+            },
+            "light_intensity": {
+              "$ref": "#/$defs/nonneg"
+            },
+            "light_range_m": {
+              "$ref": "#/$defs/pos"
+            },
+            "flicker": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "flame_color": {
+              "$ref": "#/$defs/color"
+            },
+            "smoke_color": {
+              "$ref": "#/$defs/color"
+            },
+            "white_smoke_color": {
+              "$ref": "#/$defs/color"
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "required": [
+            "stages",
+            "shake_deg",
+            "shake_hz",
+            "hot_flash_s",
+            "hot_color",
+            "blur_start_m",
+            "blur_end_m"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "stages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "vignette",
+                  "saturation",
+                  "blur_radius"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "vignette": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "saturation": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "blur_radius": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1.5,
+                    "description": "URP Gaussian depth of field max radius; 0 = off"
+                  }
+                }
+              },
+              "minItems": 4,
+              "maxItems": 4,
+              "description": "index = body stage 0..3"
+            },
+            "shake_deg": {
+              "$ref": "#/$defs/nonneg"
+            },
+            "shake_hz": {
+              "$ref": "#/$defs/pos"
+            },
+            "hot_flash_s": {
+              "$ref": "#/$defs/nonneg"
+            },
+            "hot_color": {
+              "$ref": "#/$defs/color"
+            },
+            "blur_start_m": {
+              "$ref": "#/$defs/nonneg"
+            },
+            "blur_end_m": {
+              "$ref": "#/$defs/nonneg"
+            }
+          }
+        },
+        "subtitles": {
+          "type": "object",
+          "description": "one-line subtitles (16.11), shown subtitle_s",
+          "required": [
+            "sound",
+            "smell",
+            "smoke",
+            "alarm",
+            "stage_1",
+            "stage_2",
+            "stage_3",
+            "hot_handle",
+            "cool_handle"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "sound": {
+              "type": "string"
+            },
+            "smell": {
+              "type": "string"
+            },
+            "smoke": {
+              "type": "string"
+            },
+            "alarm": {
+              "type": "string"
+            },
+            "stage_1": {
+              "type": "string"
+            },
+            "stage_2": {
+              "type": "string"
+            },
+            "stage_3": {
+              "type": "string"
+            },
+            "hot_handle": {
+              "type": "string"
+            },
+            "cool_handle": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "required": [
+        "volume",
+        "alarm_hz",
+        "alarm_on_s",
+        "alarm_off_s",
+        "crackle_volume",
+        "hiss_s",
+        "spray_volume"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "volume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "alarm_hz": {
+          "$ref": "#/$defs/pos"
+        },
+        "alarm_on_s": {
+          "$ref": "#/$defs/pos"
+        },
+        "alarm_off_s": {
+          "$ref": "#/$defs/pos"
+        },
+        "crackle_volume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "hiss_s": {
+          "$ref": "#/$defs/pos"
+        },
+        "spray_volume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
         }
       }
     }

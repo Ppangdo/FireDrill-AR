@@ -12,7 +12,9 @@
     "handle_range_m": 1.0,
     "handle_hold_s": 0.5,
     "faucet_hold_s": 2.0,
-    "abort_hold_s": 2.0
+    "abort_hold_s": 2.0,
+    "talk_range_m": 3.0,
+    "pickup_s": 1.0
   },
   "scene": {
     "wall_thickness_m": 0.1,
@@ -51,7 +53,9 @@
           0.05,
           0.2
         ],
-        "color": "#FFFFFF"
+        "color": "#FFFFFF",
+        "pickable": true,
+        "essential": true
       },
       "extinguisher": {
         "shape": "cylinder",
@@ -60,7 +64,9 @@
           0.5,
           0.15
         ],
-        "color": "#D32F2F"
+        "color": "#D32F2F",
+        "pickable": true,
+        "essential": true
       },
       "phone": {
         "shape": "box",
@@ -69,7 +75,9 @@
           0.01,
           0.16
         ],
-        "color": "#212121"
+        "color": "#212121",
+        "pickable": true,
+        "essential": true
       },
       "document": {
         "shape": "box",
@@ -78,7 +86,9 @@
           0.02,
           0.3
         ],
-        "color": "#FDD835"
+        "color": "#FDD835",
+        "pickable": true,
+        "essential": false
       },
       "bag": {
         "shape": "box",
@@ -87,7 +97,9 @@
           0.25,
           0.15
         ],
-        "color": "#795548"
+        "color": "#795548",
+        "pickable": true,
+        "essential": false
       },
       "alarm": {
         "shape": "box",
@@ -96,7 +108,9 @@
           0.15,
           0.2
         ],
-        "color": "#E53935"
+        "color": "#E53935",
+        "pickable": false,
+        "essential": false
       },
       "faucet": {
         "shape": "box",
@@ -105,7 +119,9 @@
           0.3,
           0.4
         ],
-        "color": "#9E9E9E"
+        "color": "#9E9E9E",
+        "pickable": false,
+        "essential": false
       },
       "elevator_button": {
         "shape": "box",
@@ -114,7 +130,9 @@
           0.2,
           0.12
         ],
-        "color": "#B0BEC5"
+        "color": "#B0BEC5",
+        "pickable": false,
+        "essential": false
       },
       "window": {
         "shape": "box",
@@ -123,8 +141,15 @@
           1.0,
           1.2
         ],
-        "color": "#90CAF9"
+        "color": "#90CAF9",
+        "pickable": false,
+        "essential": false
       }
+    },
+    "npc": {
+      "height_m": 1.6,
+      "radius_m": 0.25,
+      "color": "#5C6BC0"
     }
   },
   "flow": {
@@ -146,5 +171,97 @@
     "ws_status_interval_s": 1,
     "ws_ping_timeout_s": 5,
     "ws_reconnect_s": 2
+  },
+  "items": {
+    "bag_slots": 2,
+    "extinguisher_capacity_s": 15
+  },
+  "effects": {
+    "smoke_cue_d": 0.05,
+    "subtitle_s": 3.0,
+    "smoke": {
+      "base_opacity": 0.15,
+      "per_d_opacity": 0.55,
+      "edge_fade_m": 0.3,
+      "lerp_s": 0.5,
+      "color": "#6B655F"
+    },
+    "fog": {
+      "base_density": 0.02,
+      "per_c_density": 0.25,
+      "color": "#5A5048"
+    },
+    "floor_line": {
+      "width_m": 0.04,
+      "height_m": 0.01,
+      "color": "#B3E5FC"
+    },
+    "fire": {
+      "initial": {
+        "diameter_m": 0.5,
+        "height_m": 0.8
+      },
+      "growing": {
+        "diameter_m": 1.5,
+        "height_m": 2.0
+      },
+      "extinguish_shrink_s": 3.0,
+      "light_intensity": 1.5,
+      "light_range_m": 6.0,
+      "flicker": 0.35,
+      "flame_color": "#FF7A1A",
+      "smoke_color": "#1E1E1E",
+      "white_smoke_color": "#D9D9D9"
+    },
+    "body": {
+      "stages": [
+        {
+          "vignette": 0.0,
+          "saturation": 0,
+          "blur_radius": 0
+        },
+        {
+          "vignette": 0.25,
+          "saturation": -15,
+          "blur_radius": 0
+        },
+        {
+          "vignette": 0.4,
+          "saturation": -35,
+          "blur_radius": 1.0
+        },
+        {
+          "vignette": 0.55,
+          "saturation": -60,
+          "blur_radius": 0.6
+        }
+      ],
+      "shake_deg": 0.8,
+      "shake_hz": 2.0,
+      "hot_flash_s": 1.0,
+      "hot_color": "#FF2A00",
+      "blur_start_m": 0.5,
+      "blur_end_m": 5.0
+    },
+    "subtitles": {
+      "sound": "(타닥타닥… 어디선가 무언가 타는 소리가 난다)",
+      "smell": "(어디선가 타는 냄새가 난다)",
+      "smoke": "(복도 쪽에서 연기가 보인다)",
+      "alarm": "(비상벨이 울린다)",
+      "stage_1": "(콜록, 콜록)",
+      "stage_2": "(숨이 가빠진다)",
+      "stage_3": "(눈앞이 흐려지고 어지럽다)",
+      "hot_handle": "(손잡이가 뜨겁다!)",
+      "cool_handle": "(손잡이가 뜨겁지 않다)"
+    }
+  },
+  "audio": {
+    "volume": 0.6,
+    "alarm_hz": 1000,
+    "alarm_on_s": 0.5,
+    "alarm_off_s": 0.5,
+    "crackle_volume": 0.5,
+    "hiss_s": 0.4,
+    "spray_volume": 0.4
   }
 }

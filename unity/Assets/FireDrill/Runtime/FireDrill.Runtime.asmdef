@@ -2,7 +2,9 @@
     "name": "FireDrill.Runtime",
     "rootNamespace": "FireDrill.Runtime",
     "references": [
-        "FireDrill.Core"
+        "FireDrill.Core",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

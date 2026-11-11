@@ -14,6 +14,10 @@ namespace FireDrill.Runtime
         bool InputEnabled { get; set; }
         /// <summary>Camera the overlay and screenshots use, may be null.</summary>
         Camera Camera { get; }
+        /// <summary>Body stage 3 view shake (명세서 16.11, PC only). 0 = off.</summary>
+        void SetShake(float amplitudeDeg, float hz);
+        /// <summary>Dialogue choice key pressed (0-based), for the open conversation.</summary>
+        event System.Action<int> ChoiceKey;
     }
 
     public sealed class PlatformContext

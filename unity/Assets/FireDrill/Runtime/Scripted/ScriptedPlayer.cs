@@ -56,6 +56,10 @@ namespace FireDrill.Runtime
         public ISpaceProvider Space { get; } = new PlatformRegistry.IdentitySpace();
         public bool InputEnabled { get; set; }
         public Camera Camera => null;
+        public void SetShake(float amplitudeDeg, float hz) { }
+#pragma warning disable 67 // play scripts choose through Bootstrap.Npcs
+        public event Action<int> ChoiceKey;
+#pragma warning restore 67
         /// <summary>The controller floats skinWidth above the floor; the head height is measured from the floor.</summary>
         public Vec3 Head { get { var p = transform.position; return new Vec3(p.x, Mathf.Max(0f, p.y - _body.skinWidth) + _head, p.z); } }
         public Vec3 Forward { get { var f = transform.forward; return new Vec3(f.x, f.y, f.z); } }
@@ -138,7 +142,8 @@ namespace FireDrill.Runtime
                     _headTarget = s.On ? _pc.CrouchHeadM : _standing;
                     break;
                 case "choose":
-                    Debug.LogWarning("[ScriptedPlayer] 'choose' needs the dialogue runner (stage 6/7); skipped");
+                    if (_boot.Npcs.Talking == null) Fail("'choose' without an open conversation (talk_to first)");
+                    else _boot.Npcs.Choose(s.Intent);
                     break;
             }
         }

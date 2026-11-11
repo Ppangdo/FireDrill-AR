@@ -36,6 +36,16 @@ namespace FireDrill.Runtime
         public RunRecorder Recorder { get; private set; }
         public FireDirector Fire { get; private set; }
         public DoorInteractions Doors { get; private set; }
+        public ItemInteractions Items { get; private set; }
+        public NpcStubs Npcs { get; private set; }
+        public PlayerExposure Exposure { get; private set; }
+        public SmokeRenderer Smoke { get; private set; }
+        public FireVfx FireView { get; private set; }
+        public BodyEffects Body { get; private set; }
+        public AudioFx Audio { get; private set; }
+        /// <summary>Current one-line subtitle and when it disappears (realtime).</summary>
+        public string Subtitle { get; private set; }
+        private float _subtitleUntil;
         public ServerClient Server { get; private set; }
         public EvaluationResult LastEvaluation { get; private set; }
         public string LastRunFile { get; private set; }
@@ -65,18 +75,29 @@ namespace FireDrill.Runtime
 
             Building = SceneBuilder.Build(Config.Graph, rt.Scene, transform);
 
-            var engine = new ZeroFireEngine(); // stage 3: no smoke (명세서 15장)
+            var engine = new FireEngine();
             Platform = PlatformRegistry.Create(BootstrapOptions.Platform ?? app.Platform, new PlatformContext
             {
                 Config = Config, Parent = transform, Building = Building, Args = BootstrapOptions.PlatformArgs,
             });
             GameFlow flow = null;
-            Recorder = new RunRecorder(Config.Graph, engine, Platform.Rig, () => flow.T, () => 0f,
+            Recorder = new RunRecorder(Config.Graph, engine, Platform.Rig, () => flow.T, () => Exposure?.Fed ?? 0f,
                                        Config.Evaluation, rt.Flow, BootstrapOptions.LogDir);
             Server = new ServerClient(app, rt.Network, rt.Flow.RunCreateWaitS);
             Flow = flow = new GameFlow(Config.Scenario, rt.Flow, Recorder, Server);
-            Fire = new FireDirector(engine, Config.Graph, Config.Fire, Config.Scenario, Flow, Recorder, rt.Flow.TickS);
-            Doors = new DoorInteractions(Building, Config.Graph, Config.Scenario, Fire, Recorder, Platform.Rig, Flow, rt.Pc, Platform.Input);
+            Fire = new FireDirector(engine, Config.Graph, Config.Fire, Config.Scenario, Flow, Recorder, rt.Flow.TickS)
+            {
+                SmokeCueD = rt.Effects.SmokeCueD,
+                TraineeZone = () => Recorder.CurrentZone,
+            };
+            Doors = new DoorInteractions(Building, Config.Graph, Config.Scenario, Fire, Recorder, Platform.Rig, Flow, rt.Pc,
+                                         Platform.Input, Config.Evaluation);
+            Items = new ItemInteractions(Building, Config.Graph, Config.Scenario, Config.Fire, rt, Fire, Recorder, Platform.Rig,
+                                         Flow, Platform.Input);
+            Npcs = new NpcStubs(Config.Scenario, Config.Dialogue, rt, Recorder, Platform.Rig, Flow, Platform.Input, transform);
+            Exposure = new PlayerExposure(Config.Fire, Fire, Platform.Rig, Items.Inventory, Recorder, Flow);
+            BuildEffects(engine, rt);
+            Platform.ChoiceKey += i => Npcs.ChooseIndex(i);
 
             Recorder.Appended += Server.Enqueue;
             Recorder.RunFinished += OnRunFinished;
@@ -94,6 +115,68 @@ namespace FireDrill.Runtime
                 Debug.Log($"[FireDrill] server {(online ? "online" : "offline")} ({app.ServerUrl}) llm={Server.Llm}");
                 _bootReady = true; // continue in Update so every component has run Start()
             });
+        }
+
+        private void BuildEffects(IFireEngine engine, RuntimeConfig rt)
+        {
+            var fx = new GameObject("Effects");
+            fx.transform.SetParent(transform, false);
+            Smoke = fx.AddComponent<SmokeRenderer>();
+            Smoke.Init(Config.Graph, engine, Platform.Rig, Config.Fire, rt);
+            var fireGo = new GameObject("Fire");
+            fireGo.transform.SetParent(fx.transform, false);
+            FireView = fireGo.AddComponent<FireVfx>();
+            FireView.Init(Config.Graph, Config.Scenario.Fire.OriginZone, engine, rt);
+            Body = fx.AddComponent<BodyEffects>();
+            Body.Init(Platform, rt);
+            Audio = fx.AddComponent<AudioFx>();
+            Audio.Init(FireView.transform.position, rt);
+
+            var subs = rt.Effects.Subtitles;
+            Fire.Ticked += (t, dt) => Smoke.OnTick();
+            Fire.CueExposed += cue =>
+            {
+                var key = cue.ToString().ToLowerInvariant();
+                if (subs.TryGetValue(key, out var text)) Say(text);
+                if (cue == CueKind.Alarm) Audio.SetAlarm(true);
+            };
+            Exposure.StageChanged += stage =>
+            {
+                Body.SetStage(Mathf.Min(stage, 3));
+                if (subs.TryGetValue("stage_" + stage, out var text)) Say(text);
+            };
+            Doors.HandleChecked += (edge, hot) =>
+            {
+                if (hot) { Body.HotHandle(); Audio.HotHandle(); }
+                Say(subs[hot ? "hot_handle" : "cool_handle"]);
+            };
+            Items.Sprayed += _ => Audio.Spray();
+            Flow.RunStarted += _ =>
+            {
+                Smoke.Snap();
+                FireView.ResetFire();
+                Body.SetStage(0);
+                Audio.StopAll();
+                Subtitle = null;
+            };
+            Flow.StateChanged += (from, to) => { if (to == FlowState.Aborted) SetEffects(false); };
+            Flow.PausedChanged += paused => SetEffects(!paused);
+        }
+
+        /// <summary>Aborted or paused: every effect off (명세서 5장, 10장).</summary>
+        private void SetEffects(bool on)
+        {
+            Smoke.SetVisible(on);
+            FireView.SetVisible(on);
+            Body.SetVisible(on);
+            if (!on) Audio.StopAll();
+        }
+
+        /// <summary>One-line subtitle for subtitle_s (16.11).</summary>
+        public void Say(string text)
+        {
+            Subtitle = text;
+            _subtitleUntil = Time.realtimeSinceStartup + Config.Runtime.Effects.SubtitleS;
         }
 
         private void OnStateChanged(FlowState from, FlowState to)
@@ -149,7 +232,7 @@ namespace FireDrill.Runtime
             if (Flow == null) return null;
             var head = Platform.Rig.Head;
             return new DeviceStatus(Flow.RunActive ? Flow.RunId : null, Flow.State.ToString(), Flow.T,
-                                    Recorder.CurrentZone ?? Config.Graph.ZoneAt(head), 0f, 0);
+                                    Recorder.CurrentZone ?? Config.Graph.ZoneAt(head), Exposure.Fed, Exposure.Stage);
         }
 
         private void Update()
@@ -161,12 +244,16 @@ namespace FireDrill.Runtime
             Flow.Tick(Time.deltaTime);
             Fire.Update();
             Recorder.Update(); // ZONE_ENTER into the exit is logged before the run ends
+            if (Subtitle != null && Time.realtimeSinceStartup > _subtitleUntil) Subtitle = null;
+            var phase = Fire.Engine.Phase;
+            if (Flow.State != FlowState.Aborted && !Flow.Paused)
+                Audio.SetFire(phase == FirePhase.Initial || phase == FirePhase.Growing || phase == FirePhase.Full);
             if (Flow.State == FlowState.Fire)
             {
                 var zone = Recorder.CurrentZone;
                 if (zone != null && Config.Graph.IsExit(zone)) Flow.ReachedExit();
             }
-            Platform.InputEnabled = !Flow.Paused &&
+            Platform.InputEnabled = !Flow.Paused && !Items.Busy &&
                 (Flow.State == FlowState.Tutorial || Flow.State == FlowState.PreFire || Flow.State == FlowState.Fire);
         }
 
