@@ -27,8 +27,9 @@ namespace FireDrill.Platform.Pc
         private CharacterController _body;
         private Camera _camera;
         private float _standing, _head, _headTarget, _pitch;
-        private float _hHeld, _escHeld;
-        private bool _hFired, _escFired;
+        private float _hHeld, _escHeld, _eHeld, _sprayHeld;
+        private bool _hFired, _escFired, _eFired;
+        private float _shakeDeg, _shakeHz;
         private bool _inputEnabled;
 
         // ---- IPlatform / IPlayerRig / IInteractionSource ---------------------
@@ -43,6 +44,13 @@ namespace FireDrill.Platform.Pc
         public float StandingHeight => _standing;
         public event Action<Intent> IntentRaised;
         public string FocusedTargetId { get; private set; }
+        public event Action<int> ChoiceKey;
+
+        public void SetShake(float amplitudeDeg, float hz)
+        {
+            _shakeDeg = amplitudeDeg;
+            _shakeHz = hz;
+        }
 
         public bool InputEnabled
         {
@@ -109,7 +117,13 @@ namespace FireDrill.Platform.Pc
                 var d = mouse.delta.ReadValue() * _pc.MouseSensitivityDeg;
                 transform.Rotate(0f, d.x, 0f, UnityEngine.Space.Self);
                 _pitch = Mathf.Clamp(_pitch - d.y, -_pc.PitchLimitDeg, _pc.PitchLimitDeg);
-                _camera.transform.localRotation = Quaternion.Euler(_pitch, 0, 0);
+                float shakeX = 0f, shakeY = 0f;
+                if (_shakeDeg > 0f)
+                {
+                    shakeX = (Mathf.PerlinNoise(Time.time * _shakeHz, 0.1f) - 0.5f) * 2f * _shakeDeg;
+                    shakeY = (Mathf.PerlinNoise(0.7f, Time.time * _shakeHz) - 0.5f) * 2f * _shakeDeg;
+                }
+                _camera.transform.localRotation = Quaternion.Euler(_pitch + shakeX, shakeY, 0);
             }
 
             var input = new Vector2((kb.dKey.isPressed ? 1 : 0) - (kb.aKey.isPressed ? 1 : 0),
@@ -123,8 +137,33 @@ namespace FireDrill.Platform.Pc
 
             FocusedTargetId = Raycast();
             if (kb.fKey.wasPressedThisFrame && IsDoor(FocusedTargetId)) Raise(IntentKind.ToggleDoor, FocusedTargetId);
-            if (kb.eKey.wasPressedThisFrame && FocusedTargetId != null && !IsDoor(FocusedTargetId))
-                Raise(IsPickable(FocusedTargetId) ? IntentKind.Grab : IntentKind.Use, FocusedTargetId);
+            // E: pick up / use / talk. The faucet needs E held faucet_hold_s (16.7).
+            if (kb.eKey.isPressed && FocusedTargetId != null && !IsDoor(FocusedTargetId))
+            {
+                _eHeld += dt;
+                if (!_eFired)
+                {
+                    if (FocusedTargetId.StartsWith("npc_")) { _eFired = true; Raise(IntentKind.TalkTo, FocusedTargetId); }
+                    else if (IsKind(FocusedTargetId, ObjectKind.Faucet))
+                    {
+                        if (_eHeld >= _pc.FaucetHoldS) { _eFired = true; Raise(IntentKind.Use, FocusedTargetId, _eHeld); }
+                    }
+                    else if (FocusedTargetId != ItemInteractions.FireTarget)
+                    {
+                        _eFired = true;
+                        Raise(IsPickable(FocusedTargetId) ? IntentKind.Grab : IntentKind.Use, FocusedTargetId);
+                    }
+                }
+            }
+            else { _eHeld = 0; _eFired = false; }
+
+            // Extinguisher: hold the left mouse button; the spray time is reported on release.
+            if (mouse != null && mouse.leftButton.isPressed) _sprayHeld += dt;
+            else if (_sprayHeld > 0f) { Raise(IntentKind.Use, ItemInteractions.FireTarget, _sprayHeld); _sprayHeld = 0f; }
+
+            if (kb.digit1Key.wasPressedThisFrame) ChoiceKey?.Invoke(0);
+            if (kb.digit2Key.wasPressedThisFrame) ChoiceKey?.Invoke(1);
+            if (kb.digit3Key.wasPressedThisFrame) ChoiceKey?.Invoke(2);
             if (kb.tKey.wasPressedThisFrame) Raise(IntentKind.TowelToggle);
             if (kb.gKey.wasPressedThisFrame) Raise(IntentKind.Drop);
 
@@ -145,6 +184,8 @@ namespace FireDrill.Platform.Pc
         }
 
         private bool IsDoor(string id) => id != null && _building.Doors.ContainsKey(id);
+
+        private bool IsKind(string id, ObjectKind kind) => _building.Objects.TryGetValue(id, out var o) && o.Kind == kind;
 
         private bool IsPickable(string id) =>
             _building.Objects.TryGetValue(id, out var o) &&

@@ -8,7 +8,7 @@
 | `../unity/Assets/FireDrill/Runtime/Contracts/` | 플랫폼 어댑터 인터페이스 (`IPlayerRig`, `IInteractionSource`, `ISpaceProvider`) |
 | `../server/app/schemas.py` | 서버 API Pydantic 모델 |
 | `golden/` | 표준 로그 3종 + 기대 평가, 화재 참조 궤적 `fire_demo.trace.json` (모두 `gen_golden.py`로 생성) |
-| `playscripts/` | 자동 플레이 스크립트 (15.2). `walk_play`는 3단계(화재 없음) 통과 조건용 |
+| `playscripts/` | 자동 플레이 스크립트 (15.2). `walk_play`는 3단계 통과 조건용, `model_play`·`fail_play`는 4단계 통과 조건(결말·항목별 등급) |
 | `tools/gen_golden.py` | 표준 로그 생성기 (stdlib) |
 | `tools/ref_eval.py` | 참조 평가기. C# Evaluator는 이것과 같은 등급을 내야 한다 |
 | `tools/ref_fire.py` | 참조 화재 모델. C# FireEngine은 이것과 D가 0.01 안에서 같아야 하고, `fire.json`은 `scenario.json`의 `tuning_targets`를 만족해야 한다 |
@@ -17,8 +17,8 @@
 
 ```
 uv run --project server python -m pytest server/tests        # 스키마·상호 참조·표준 로그·화재 궤적 + 서버 엔드포인트 (93개)
-Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults ../out/editmode.xml   # 99개
-Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResults ../out/playmode.xml               # 5개 (실제 서버를 띄움, 스크린샷 포함)
+Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults ../out/editmode.xml   # 103개
+Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResults ../out/playmode.xml               # 9개 (실제 서버를 띄움, 스크린샷 포함)
 ```
 
 `fire.json`·`scenario.json`·`zone_graph.json`을 바꾸면 `gen_golden.py`를 다시 돌려 `fire_demo.trace.json`을 갱신한다 (CI가 차이를 잡는다). C# 테스트 `FireEngineTests.MatchesReferenceModel_180s`가 이 파일과 비교한다.
@@ -70,6 +70,22 @@ Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResult
 - **스크린샷**: `ScreenshotTests`가 고정 5곳을 `out/screenshots/stage3/`에 저장한다. 그래픽 장치가 필요해서 `-nographics`면 건너뛴다.
 - **프리팹 대체(16.2 `Prefabs/{kind}.prefab`)는 아직 없음**: 에셋이 들어오는 8단계에 Resources 경로로 넣는다.
 
+## 4단계(화재 데모) 구현 메모
+
+명세서에 정해져 있지 않아 구현에서 고른 것. 코드는 `Runtime/Fire/`, `Runtime/Items/`, `Runtime/Interact/`, `Runtime/Effects/`, 테스트는 `Tests/PlayMode/FireDemoTests.cs`, `Tests/EditMode/InventoryAndEffectsTests.cs`.
+
+- **NPC 자리표시(사람 결정 2026-11-11)**: 4단계는 "NPC 없음"인데 모범 플레이 기대값에 `warn_others` 좋음이 있어서, 스폰 위치에 서 있는 캡슐(`NpcStubs`, 충돌 없음)과 대화 선택만 넣었다. E로 말 걸기(반경 `talk_range_m` 3 m, 8장 "NPC 반경 3m") → `dialogue.json`의 `{npc}_fire`(화재 전에는 `_idle`) 선택지 → `NPC_INTERACT {npc, action}`, warn은 `SHOUT {method: choice}`도. 이동·반응·LLM·"지나침(ignore)" 감지·`npc_results`는 6단계.
+- **`model_play.json` 동선 조정(사람 결정 2026-11-11)**: 실제 화재 엔진에서는 원래 동선이 발화 약 45초에 탈출해 복도 연기가 짙어지기 전(D 0.3 ≈ 58초, 연기층 1.65 m 아래 ≈ 70초)에 나가 `nose_mouth`·`low_posture`가 해당 없음이 됐다. 그래서 ① 복도로 나온 뒤 302호 문을 닫고(닫지 않으면 연기가 실습실로 퍼져 복도 D가 70초에 0.24에 그침) ② 경보를 누른 뒤 중간 복도에서 낮은 자세로 55초 머문다(준호 설득). 결과: 8항목 모두 좋음, 100%. 화재 튜닝·기대 등급은 그대로.
+- **`fail_play` 결과**: 발화 약 182초(+20초 PreFire)에 엘리베이터 로비에서 FED 1.0 → `failed`, 소지품 보통·나머지 미흡, 6% (표준 로그 `fail_run`과 같은 등급).
+- **`runtime.json` 추가 수치**: `pc.talk_range_m`·`pickup_s`, 오브젝트별 `pickable`·`essential`(16.10 표), `scene.npc`, `items`(가방 2칸, 소화기 15초), `effects`(smoke 단서 D 0.05, 연기·안개·바닥선·불·신체 효과·자막), `audio`(대체음).
+- **화재 연결**: Core `FireEngine` 사용. FireDirector가 0.1초 틱마다 `Ticked`를 내고 PlayerExposure가 머리 c와 수건 상태로 FED를 쌓는다. 단계 1~3은 `BODY_STAGE`, FED 1.0이면 GameFlow `FedReachedOne`. smoke 단서는 훈련자 구역 D > `smoke_cue_d`. `door_events`(창고 문 38초 터짐)는 문을 저절로 열고 **DOOR_OPEN을 남기지 않는다**(훈련자 행동이 아니므로 door_check에 안 들어감).
+- **checked_before**: 같은 문의 HANDLE_CHECK가 `evaluation.json` `door_check.check_window_s`(5초) 안에 있었는지(평가 `measure` 문장대로 Runtime이 채움).
+- **아이템**: 줍기는 `pickup_s` 동안 이동·다른 입력을 막는다. 손에 든 채 또 주우면 든 것은 가방으로, 가방이 차면 바닥에. 재시도·`start: prefire` run은 서류를 손에 든 채 시작(16.12, PICKUP 기록 없음). 수도는 수건이 인벤토리 어디에 있어도 E를 `faucet_hold_s` 누르면 `TOWEL_WET`. T는 수건이 있을 때만 `TOWEL_EQUIP {on}`. 착용 중 수건을 버리면 `TOWEL_EQUIP {on: false}`. 버린 젖은 수건은 젖은 채로 남는다.
+- **소화기**: 손에 들고 마우스 왼쪽을 누른 시간을 놓을 때 `Use("fire", 시간)`으로 보낸다. 초기 단계·사거리(`fire.extinguish_range_m`) 안의 분사 시간을 누적해 FireEngine.Extinguish에 넘기고 `EXTINGUISH {phase, duration, success}`를 남긴다. 소화기 용량 15초.
+- **표현**: 연기는 구역마다 연기층~천장 반투명 각기둥(URP Particles/Unlit, 아래 0.3 m는 투명으로 번짐), 불투명도 `0.15 + 0.55·D`를 `fire.render.max_opacity`(0.7)로 자른다(EditMode 테스트). 머리가 연기층 안이면 Exponential² 안개. 바닥 가장자리 선은 연기보다 뒤에 그린다. 불은 파티클+깜빡이는 조명, 단계별 크기, 진화 후 3초에 걸쳐 줄고 흰 연기. 신체 효과는 URP Volume(비네팅·채도·가우시안 흐림), 3단계 시점 흔들림(PC), 뜨거운 손잡이는 붉은 테두리. 소리 파일이 없어 16.6의 대체음을 코드로 만든다(타는 소리·1 kHz 경보·치익·분사 노이즈). 기침·호흡은 자막. 중단·일시정지면 모두 끈다.
+- **자막·UI**: 아직 `DebugOverlay`(자막·인벤토리·NPC 선택지·결말의 연기 농도). 한글은 시스템 글꼴 대체로 그린다. 화재 중 게이지는 없다.
+- **스크린샷**: `out/screenshots/stage4/` — 발화 80초, 중간 복도 서서/낮춰서, 불난 창고, 남쪽 복도, 전체. 불 파티클 모양은 8단계 에셋 단계에서 다듬는다.
+
 ## 명세서 반영 대기
 
 1. **14.6 요원 화면 보조 엔드포인트**: `GET /staff/devices` → `{schema_version, devices: [{device_id, connected, status: WsStatus|null, status_age_s}]}`. 요원 화면이 1초마다 읽는다. 9·14.6 표에 추가하면 된다.
@@ -79,6 +95,9 @@ Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResult
 5. **14.5 설정 파일 표**: `runtime.json`(주인: AI 튜닝, 읽는 쪽: Runtime·Platform.Pc, 내용: PC 조작·씬 생성·흐름 시간·네트워크 수치) 행 추가, "7종" → "8종". 14장 첫 표의 스키마 "11종" → "12종".
 6. **15.3 AI 실행 환경**: PlayMode 명령(`-nographics` 없이 돌리면 스크린샷까지), 프로젝트 설정 `Unity -batchmode -quit -projectPath unity -executeMethod FireDrill.Editor.ProjectSetup.Run`, 빌드 `... -executeMethod FireDrill.Editor.Build.Pc`(→ `unity/Builds/Pc/FireDrill.exe`).
 7. **15장 3단계 행**: 가짜 구현에 "튜토리얼(바로 PreFire)"을 더하고, 문 열기·닫기는 3단계에 들어왔다는 것.
+8. **15장 4단계 행**: 가짜 구현 "NPC 없음" → "NPC는 서 있는 자리표시(대화 선택·NPC_INTERACT만)". 통과 조건은 `npc_results`를 빼고 확인한다는 것.
+9. **16.13 모범 플레이 동선**: 302호 문을 닫고 나오기, 중간 복도에서 낮은 자세로 준호 설득(연기 속에 머무름)을 넣었다는 것.
+10. **14.5 `runtime.json` 내용**: 4단계 항목(아이템·효과·자막·소리 대체) 추가.
 
 ## 명세서 반영 완료 (2026-11-11)
 

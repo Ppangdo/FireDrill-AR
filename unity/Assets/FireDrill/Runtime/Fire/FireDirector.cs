@@ -4,8 +4,8 @@ using FireDrill.Core;
 namespace FireDrill.Runtime
 {
     /// <summary>Drives the fire engine (명세서 14.4): fixed 0.1 s tick on run time, ignition on Fire,
-    /// timed cues (sound · smell · alarm) as CUE_EXPOSED, door state relay.
-    /// Stage 3 runs it with ZeroFireEngine; the smoke cue and scenario door_events come with stage 4.</summary>
+    /// cues as CUE_EXPOSED (sound · smell · alarm by time after ignition or an earlier alarm press; smoke when the
+    /// trainee's zone D passes effects.smoke_cue_d), scenario door_events, door state relay.</summary>
     public sealed class FireDirector
     {
         private readonly IFireEngine _engine;
@@ -16,9 +16,19 @@ namespace FireDrill.Runtime
         private readonly IRunRecorder _recorder;
         private readonly float _tick;
         private readonly HashSet<CueKind> _exposed = new HashSet<CueKind>();
+        private readonly HashSet<int> _doorEventsDone = new HashSet<int>();
         private float _engineT;
 
         public IFireEngine Engine => _engine;
+        /// <summary>Smoke cue threshold; 0 disables the smoke cue.</summary>
+        public float SmokeCueD { get; set; }
+        /// <summary>Zone the trainee is in (for the smoke cue).</summary>
+        public System.Func<string> TraineeZone { get; set; }
+        /// <summary>Every fixed tick after the engine stepped: (run t, dt). PlayerExposure accumulates here.</summary>
+        public event System.Action<float, float> Ticked;
+        /// <summary>Scenario door event (edge, open): the door moves by itself, nobody logs DOOR_OPEN.</summary>
+        public event System.Action<string, bool> DoorEvent;
+        public event System.Action<CueKind> CueExposed;
 
         public FireDirector(IFireEngine engine, ZoneGraph graph, FireConfig cfg, Scenario scenario, GameFlow flow,
                             IRunRecorder recorder, float tickS)
@@ -44,6 +54,7 @@ namespace FireDrill.Runtime
             foreach (var id in _scenario.BlockedEdges ?? new List<string>()) _graph.SetBlocked(id, true);
             _engine.Reset(_graph, _cfg, _scenario);
             _exposed.Clear();
+            _doorEventsDone.Clear();
             _engineT = 0;
         }
 
@@ -56,21 +67,33 @@ namespace FireDrill.Runtime
         public void Update()
         {
             if (!_flow.RunActive || _flow.Paused) return;
-            while (_engineT + _tick <= _flow.T + 1e-4f)
+            while (_engineT + _tick <= _flow.T + 1e-4f && _flow.RunActive)
             {
                 _engineT += _tick;
                 _engine.Tick(_engineT, _tick);
+                Ticked?.Invoke(_engineT, _tick);
             }
             if (_flow.State != FlowState.Fire || !_flow.FireT.HasValue) return;
             float sinceFire = _flow.T - _flow.FireT.Value;
             foreach (var cue in _scenario.Cues)
                 if (cue.Cue != CueKind.Smoke && sinceFire >= cue.AtS) Expose(cue.Cue);
+            var zone = TraineeZone?.Invoke();
+            if (SmokeCueD > 0 && zone != null && _engine.Get(zone).D > SmokeCueD) Expose(CueKind.Smoke);
+            var events = _scenario.DoorEvents;
+            for (int i = 0; i < events.Count; i++)
+            {
+                if (sinceFire < events[i].AtS || !_doorEventsDone.Add(i)) continue;
+                bool open = events[i].Action != Scenario.DoorAction.Close;
+                _engine.SetDoor(events[i].Edge, open);
+                DoorEvent?.Invoke(events[i].Edge, open);
+            }
         }
 
         private void Expose(CueKind cue)
         {
             if (_flow.State != FlowState.Fire || !_exposed.Add(cue)) return;
             _recorder.Record(EventTypes.CueExposed, new { cue = cue.ToString().ToLowerInvariant() });
+            CueExposed?.Invoke(cue);
         }
     }
 }
