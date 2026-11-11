@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "name": "tutorial_play",
+  "time_scale": 4,
+  "start": "tutorial",
+  "steps": [
+    {"do": "wait", "seconds": 2},
+    {"do": "choose", "intent": "accept_errand"},
+    {"do": "walk_to", "pos": [2.6, 13.0]},
+    {"do": "intent", "kind": "toggle_door", "target": "e_302_door", "want_open": true},
+    {"do": "wait", "seconds": 0.6},
+    {"do": "walk_to", "pos": [1.0, 13.0]},
+    {"do": "walk_to", "pos": [1.0, 5.0]},
+    {"do": "intent", "kind": "toggle_door", "target": "e_301_door", "want_open": true},
+    {"do": "wait", "seconds": 0.6},
+    {"do": "walk_to", "pos": [2.6, 5.0]},
+    {"do": "walk_to", "pos": [5.6, 3.4]},
+    {"do": "intent", "kind": "grab", "target": "o_document"},
+    {"do": "walk_to", "pos": [2.6, 5.0]},
+    {"do": "walk_to", "pos": [1.0, 5.0]},
+    {"do": "walk_to", "pos": [1.0, 13.0]},
+    {"do": "walk_to", "pos": [2.6, 13.0]},
+    {"do": "walk_to", "pos": [4.0, 13.0]},
+    {"do": "wait", "seconds": 0.5},
+    {"do": "choose", "intent": "ok"},
+    {"do": "wait_for", "event": "CUE_EXPOSED"},
+    {"do": "walk_to", "pos": [2.6, 13.0]},
+    {"do": "intent", "kind": "handle_check", "target": "e_302_door", "hold_s": 0.5},
+    {"do": "intent", "kind": "toggle_door", "target": "e_302_door", "want_open": true},
+    {"do": "walk_to", "pos": [1.0, 13.0]},
+    {"do": "walk_to", "pos": [1.0, 0.7]},
+    {"do": "intent", "kind": "handle_check", "target": "e_stair_b", "hold_s": 0.5},
+    {"do": "intent", "kind": "toggle_door", "target": "e_stair_b", "want_open": true},
+    {"do": "wait", "seconds": 0.6},
+    {"do": "walk_to_exit", "exit": "z_exit_stair_b"}
+  ],
+  "expect": {
+    "outcome": "escaped"
+  }
+}

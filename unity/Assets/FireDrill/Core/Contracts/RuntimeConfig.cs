@@ -193,6 +193,11 @@ namespace FireDrill.Core
             public Dictionary<string, string> Grades { get; set; }
             public float TimelineMaxC { get; set; }
             public Dictionary<string, string> NpcResults { get; set; }
+            public float LineS { get; set; }
+            public Dictionary<string, string> Prompts { get; set; }
+            public Dictionary<string, string> Items { get; set; }
+            public Dictionary<string, string> TowelStates { get; set; }
+            public Dictionary<string, string> Endings { get; set; }
         }
 
         /// <summary>16.9 NPC behaviour.</summary>

@@ -57,9 +57,14 @@ namespace FireDrill.Runtime
         public bool InputEnabled { get; set; }
         public Camera Camera => null;
         public void SetShake(float amplitudeDeg, float hz) { }
-#pragma warning disable 67 // play scripts choose through Bootstrap.Npcs
+#pragma warning disable 67 // play scripts choose through Bootstrap.Npcs / Bootstrap.Dialogue
         public event Action<int> ChoiceKey;
+        public event Action DebugToggle;
 #pragma warning restore 67
+        public bool UiFocus { get; set; }
+
+        /// <summary>Raise an intent directly (tests: emergency stop, extra actions).</summary>
+        public void Raise(Intent intent) => IntentRaised?.Invoke(intent);
         /// <summary>The controller floats skinWidth above the floor; the head height is measured from the floor.</summary>
         public Vec3 Head { get { var p = transform.position; return new Vec3(p.x, Mathf.Max(0f, p.y - _body.skinWidth) + _head, p.z); } }
         public Vec3 Forward { get { var f = transform.forward; return new Vec3(f.x, f.y, f.z); } }
@@ -142,8 +147,9 @@ namespace FireDrill.Runtime
                     _headTarget = s.On ? _pc.CrouchHeadM : _standing;
                     break;
                 case "choose":
-                    if (_boot.Npcs.Talking == null) Fail("'choose' without an open conversation (talk_to first)");
-                    else _boot.Npcs.Choose(s.Intent);
+                    if (_boot.Npcs.Talking != null) _boot.Npcs.Choose(s.Intent);
+                    else if (_boot.Dialogue.Open) _boot.Dialogue.Choose(s.Intent);
+                    else Fail("'choose' without an open dialogue");
                     break;
             }
         }

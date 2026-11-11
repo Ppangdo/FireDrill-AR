@@ -286,6 +286,34 @@
       "rescued": "구조됨",
       "collapsed": "쓰러짐",
       "remained": "남음"
+    },
+    "line_s": 6.0,
+    "prompts": {
+      "pickup": "E: 줍기",
+      "use": "E: 누르기",
+      "faucet": "E (2초): 수건 적시기",
+      "talk": "E: 말 걸기",
+      "door": "F: 문 열기·닫기   H (0.5초): 손잡이 확인",
+      "fire": "마우스 왼쪽 (누르고 있기): 소화기 분사"
+    },
+    "items": {
+      "towel": "수건",
+      "extinguisher": "소화기",
+      "phone": "휴대폰",
+      "document": "서류",
+      "bag": "가방"
+    },
+    "towel_states": {
+      "none": "수건 없음",
+      "dry": "마른 수건",
+      "wet": "젖은 수건",
+      "on": "코·입에 대는 중"
+    },
+    "endings": {
+      "escaped": "탈출했습니다",
+      "rescued": "구조되었습니다",
+      "failed": "쓰러졌습니다",
+      "timeout": "시간이 다 되었습니다"
     }
   },
   "npc": {

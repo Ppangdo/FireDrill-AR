@@ -15,12 +15,14 @@ namespace FireDrill.Runtime
         public static string ServerUrl;             // default: app_config.server_url
         public static bool? Offline;                // default: app_config.offline
         public static string ParticipantCode;       // set → start without waiting for the start button
+        public static bool DebugOverlay;            // developer overlay visible from the start (F1 toggles it)
         public static Dictionary<string, string> PlatformArgs = new Dictionary<string, string>();
 
         public static void Reset()
         {
             ConfigDir = LogDir = Platform = ServerUrl = ParticipantCode = null;
             Offline = null;
+            DebugOverlay = false;
             PlatformArgs = new Dictionary<string, string>();
         }
     }
@@ -46,6 +48,9 @@ namespace FireDrill.Runtime
         public AudioFx Audio { get; private set; }
         public ReportController Report { get; private set; }
         public ReportView ReportScreen { get; private set; }
+        public DialogueRunner Dialogue { get; private set; }
+        public UiRoot Ui { get; private set; }
+        private DebugOverlay _overlay;
         /// <summary>Current one-line subtitle and when it disappears (realtime).</summary>
         public string Subtitle { get; private set; }
         private float _subtitleUntil;
@@ -55,8 +60,8 @@ namespace FireDrill.Runtime
         public int LastRunEventCount { get; private set; }
 
         private bool _waitingForStart;
-        private bool _skipTutorial;
         private bool _bootReady;
+        private bool _autoBegin;
 
         private void Awake()
         {
@@ -103,7 +108,17 @@ namespace FireDrill.Runtime
             Exposure = new PlayerExposure(Config.Fire, Fire, Platform.Rig, Items.Inventory, Recorder, Flow);
             BuildEffects(engine, rt);
             BuildReport();
-            Platform.ChoiceKey += i => Npcs.ChooseIndex(i);
+            Dialogue = new DialogueRunner(Config.Dialogue, Config.Scenario, Flow, Items.Inventory, Config.Graph, Platform.Rig, rt.Ui);
+            var uiGo = new GameObject("UiRoot");
+            uiGo.transform.SetParent(transform, false);
+            Ui = uiGo.AddComponent<UiRoot>();
+            Ui.Init(this);
+            Platform.ChoiceKey += i =>
+            {
+                if (Npcs.Talking != null) Npcs.ChooseIndex(i);
+                else Dialogue?.ChooseIndex(i);
+            };
+            Platform.DebugToggle += () => { if (_overlay != null) _overlay.enabled = !_overlay.enabled; };
 
             Recorder.Appended += Server.Enqueue;
             Recorder.RunFinished += OnRunFinished;
@@ -114,7 +129,9 @@ namespace FireDrill.Runtime
             Flow.StateChanged += OnStateChanged;
 
             PlaceTrainee(1);
-            gameObject.AddComponent<DebugOverlay>().Init(this);
+            _overlay = gameObject.AddComponent<DebugOverlay>();
+            _overlay.Init(this);
+            _overlay.enabled = BootstrapOptions.DebugOverlay; // F1 shows it (developer view)
 
             Server.CheckHealth(online =>
             {
@@ -216,11 +233,9 @@ namespace FireDrill.Runtime
             Debug.Log($"[FireDrill] {from} -> {to} (t={Flow.T:0.0})");
             if (to == FlowState.Calibration)
             {
-                if (BootstrapOptions.ParticipantCode != null) Begin(BootstrapOptions.ParticipantCode);
+                if (BootstrapOptions.ParticipantCode != null) _autoBegin = true; // next frame: no nested state changes
                 else _waitingForStart = true;
             }
-            // Stage 3 has no tutorial content yet (DialogueRunner: stage 7), so the tutorial ends on the next frame.
-            if (to == FlowState.Tutorial) _skipTutorial = true;
         }
 
         /// <summary>Start button (or test option): participant code → session → first run.</summary>
@@ -279,10 +294,12 @@ namespace FireDrill.Runtime
             if (Flow == null) return;
             Server.Update(Time.unscaledDeltaTime);
             if (_bootReady && Flow.State == FlowState.Boot) Flow.BootDone();
-            if (_skipTutorial) { _skipTutorial = false; Flow.TutorialDone(); }
+            else if (_autoBegin) { _autoBegin = false; Begin(BootstrapOptions.ParticipantCode); }
             Flow.Tick(Time.deltaTime);
             Fire.Update();
             Npcs.Update(Time.deltaTime);
+            Dialogue.Update(Time.deltaTime);
+            Platform.UiFocus = Ui.WantsCursor;
             Recorder.Update(); // ZONE_ENTER into the exit is logged before the run ends
             if (Subtitle != null && Time.realtimeSinceStartup > _subtitleUntil) Subtitle = null;
             var phase = Fire.Engine.Phase;
