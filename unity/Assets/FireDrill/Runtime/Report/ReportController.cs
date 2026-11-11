@@ -25,6 +25,8 @@ namespace FireDrill.Runtime
         public EvaluationResult Previous;
         /// <summary>Run t of ignition (orange marker on the timeline), null if the fire never started.</summary>
         public float? FireT;
+        /// <summary>16.9 NPC results (name, result) in scenario order.</summary>
+        public List<(string name, NpcResult result)> NpcResults = new List<(string, NpcResult)>();
     }
 
     /// <summary>명세서 8장 report flow: score and table immediately with the evaluation.json template, then the LLM

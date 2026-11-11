@@ -139,8 +139,10 @@ namespace FireDrill.Runtime
                 _items.Add(row);
             }
 
-            _npc.text = "NPC 결과: " + string.Join(", ", (_config.Scenario.Npcs ?? new System.Collections.Generic.List<Scenario.NpcSetup>())
-                                                           .Select(n => n.Name + " (6단계에서 표시)"));
+            var labels = ui.NpcResults;
+            _npc.text = m.NpcResults.Count == 0 ? "" :
+                "NPC 결과: " + string.Join(", ", m.NpcResults.Select(r =>
+                    $"{r.name} {(labels.TryGetValue(r.result.ToString().ToLowerInvariant(), out var l) ? l : r.result.ToString())}"));
         }
 
         private static Label Line(string text, string cls)

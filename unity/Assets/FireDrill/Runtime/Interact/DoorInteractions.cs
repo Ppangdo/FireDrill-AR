@@ -50,6 +50,16 @@ namespace FireDrill.Runtime
 
         public bool IsOpen(string edgeId) => _view.Doors.TryGetValue(edgeId, out var d) && d.IsOpen;
 
+        /// <summary>Someone other than the trainee (an NPC) opens or closes a door: no DOOR_OPEN/CLOSE log (명세서 16.9).</summary>
+        public void SetBySystem(string edgeId, bool open)
+        {
+            if (!_doors.ContainsKey(edgeId)) return;
+            Debug.Log($"[FireDrill] door {edgeId} {(open ? "opened" : "closed")} by an NPC at t={_flow.T:0.0}");
+            SetDoor(edgeId, open, instant: false);
+        }
+
+        public bool IsDoor(string edgeId) => edgeId != null && _doors.ContainsKey(edgeId);
+
         private void ResetDoors()
         {
             _checkedAt.Clear();

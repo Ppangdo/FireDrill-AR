@@ -12,7 +12,8 @@
     "items",
     "effects",
     "audio",
-    "ui"
+    "ui",
+    "npc"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -337,7 +338,8 @@
         "ws_status_interval_s",
         "ws_ping_timeout_s",
         "ws_reconnect_s",
-        "report_timeout_s"
+        "report_timeout_s",
+        "npc_timeout_s"
       ],
       "additionalProperties": false,
       "properties": {
@@ -373,6 +375,10 @@
         "report_timeout_s": {
           "$ref": "#/$defs/pos",
           "description": "client wait for /runs/{id}/report before keeping the template (명세서 8장 10초)"
+        },
+        "npc_timeout_s": {
+          "$ref": "#/$defs/pos",
+          "description": "client wait for /npc/react before the spare line (명세서 8장 3초)"
         }
       }
     },
@@ -724,7 +730,8 @@
         "font_atlas_px",
         "reference_resolution",
         "grades",
-        "timeline_max_c"
+        "timeline_max_c",
+        "npc_results"
       ],
       "properties": {
         "font_file": {
@@ -778,6 +785,89 @@
         },
         "timeline_max_c": {
           "$ref": "#/$defs/pos"
+        },
+        "npc_results": {
+          "type": "object",
+          "required": [
+            "rescued",
+            "collapsed",
+            "remained"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "rescued": {
+              "type": "string"
+            },
+            "collapsed": {
+              "type": "string"
+            },
+            "remained": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "npc": {
+      "type": "object",
+      "description": "16.9 NPC behaviour",
+      "required": [
+        "walk_speed_mps",
+        "head_m",
+        "crouch_head_m",
+        "follow_distance_m",
+        "lose_distance_m",
+        "door_pause_s",
+        "smoke_path_cost",
+        "ignore_radius_m",
+        "ignore_s",
+        "name_tag_height_m",
+        "name_tag_size",
+        "arrive_m",
+        "replan_s"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "walk_speed_mps": {
+          "$ref": "#/$defs/pos"
+        },
+        "head_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "crouch_head_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "follow_distance_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "lose_distance_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "door_pause_s": {
+          "$ref": "#/$defs/nonneg"
+        },
+        "smoke_path_cost": {
+          "$ref": "#/$defs/nonneg",
+          "description": "evacuate path cost = distance × (1 + this × zone D) (16.9)"
+        },
+        "ignore_radius_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "ignore_s": {
+          "$ref": "#/$defs/pos"
+        },
+        "name_tag_height_m": {
+          "$ref": "#/$defs/nonneg"
+        },
+        "name_tag_size": {
+          "$ref": "#/$defs/pos"
+        },
+        "arrive_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "replan_s": {
+          "$ref": "#/$defs/pos",
+          "description": "follow_player re-plans the path this often"
         }
       }
     }

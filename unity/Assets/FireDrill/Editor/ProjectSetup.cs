@@ -116,6 +116,7 @@ namespace FireDrill.Editor
                     File.Copy(f, Path.Combine(fonts, Path.GetFileName(f)), true);
             }
             AssetDatabase.Refresh();
+            bool ok = false;
             try
             {
                 var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
@@ -126,12 +127,13 @@ namespace FireDrill.Editor
                     options = BuildOptions.None,
                 });
                 Debug.Log("[FireDrill] build " + report.summary.result + " → " + report.summary.outputPath);
-                if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded) EditorApplication.Exit(1);
+                ok = report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded;
             }
             finally
             {
-                AssetDatabase.DeleteAsset("Assets/StreamingAssets");
+                AssetDatabase.DeleteAsset("Assets/StreamingAssets"); // build-time copy only (git-ignored)
             }
+            if (!ok) EditorApplication.Exit(1); // after the cleanup: Exit does not run finally blocks
         }
     }
 }

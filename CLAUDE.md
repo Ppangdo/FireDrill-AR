@@ -40,6 +40,7 @@ Unity 경로: `C:\Program Files\Unity\Hub\Editor\6000.6.8f1\Editor\Unity.exe` (�
 | PC 빌드 | `Unity -batchmode -quit -projectPath unity -executeMethod FireDrill.Editor.Build.Pc` → `unity/Builds/Pc/FireDrill.exe` |
 | 계약·서버 테스트(Python) | `uv run --project server python -m pytest server/tests` |
 | 표준 로그 재생성 | `uv run --project server python contracts/tools/gen_golden.py` |
+| NPC 캐시 생성 | `uv run --project server python scripts/build_npc_cache.py` (fake, 기존 항목 유지). 키가 있으면 `--mode claude --overwrite` 후 사람이 검토 |
 | 참조 평가기 | `uv run --project server python contracts/tools/ref_eval.py` |
 | 서버 실행 | `uv run --project server python -m uvicorn app.main:app --app-dir server --host 0.0.0.0 --port 8000 --ws wsproto` (설정은 `server/.env`, 예시 `server/.env.example`) |
 | 요원 화면 | 브라우저로 `http://<노트북 IP>:8000/staff?token=<DEVICE_TOKENS의 토큰>` |
