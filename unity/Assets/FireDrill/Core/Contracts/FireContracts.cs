@@ -12,6 +12,8 @@ namespace FireDrill.Core
         public float SourceRate { get; set; }
         public float AreaRefM2 { get; set; }
         public SpreadK K { get; set; }
+        /// <summary>Per-edge spread coefficient; overrides K for that edge (door state ignored).</summary>
+        public Dictionary<string, float> EdgeK { get; set; } = new Dictionary<string, float>();
         public float MinLayerY { get; set; }
         public TempConfig Temp { get; set; }
         public float HotDoorTempC { get; set; }

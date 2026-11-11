@@ -19,9 +19,15 @@ uv run --project server python -m pytest server/tests        # 스키마·상호
 Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults out/editmode.xml
 ```
 
+| `tools/ref_fire.py` | 참조 화재 모델. C# FireEngine은 이것과 D가 0.01 안에서 같아야 하고, `fire.json`은 `scenario.json`의 `tuning_targets`를 만족해야 한다 |
+
 ## 명세서 반영 대기
 
-0단계에서 계약을 코드로 옮기며 명세서와 달라진 점. 명세서 14장(필요하면 6·7·8장)에 반영하면 이 목록에서 지운다.
+(없음)
+
+## 명세서 반영 완료 (2026-11-11)
+
+0단계에서 계약을 코드로 옮기며 명세서와 달라진 점. 명세서 1·4·6·7·8·11·12·14·15장과 새 17장("나중에 바꿀 수 있는 것")에 반영했다. 같은 날 추가된 결정: 화재 튜닝 목표와 계수(`source_rate` 0.04, 문 0.3, 통로 0.02, `e_corr_sm` 0.01), 닫힌 창고 문이 발화 38초 뒤 열리는 `door_events`, 튜토리얼 종료 조건 `tutorial`, `app_config.skip_calibration`.
 
 1. **로그 공통 필드 추가**: `zone_d`(현재 구역 연기 농도), `layer_y`(연기층 높이). 평가 항목 `nose_mouth`·`low_posture`가 로그만으로 판정하려면 필요하다. `Snapshot`에도 추가.
 2. **이벤트 data 추가**: `TOWEL_EQUIP.on`(착용/해제 토글), `ALARM_PRESSED.object`.

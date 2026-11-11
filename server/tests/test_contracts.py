@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "contracts" / "tools"))
 sys.path.insert(0, str(ROOT / "server"))
 
 import ref_eval  # noqa: E402
+import ref_fire  # noqa: E402
 from app import schemas as api  # noqa: E402
 
 
@@ -95,6 +96,33 @@ def test_scenario_references(zg, scenario):
     assert set(scenario["blocked_edges"]) <= edge_ids
     for n in scenario["npcs"]:
         assert n.get("home_zone") in zone_ids
+    for ev in scenario.get("door_events", []):
+        assert ev["edge"] in edge_ids, ev
+    for t in scenario.get("tuning_targets", []):
+        assert t["zone"] in zone_ids, t
+
+
+def test_tutorial_references(zg, scenario):
+    tut = scenario["tutorial"]
+    dialogue = load(CONFIG / "dialogue.json")
+    obj_ids = {o["id"] for z in zg["zones"] for o in z["objects"]}
+    assert tut["start_node"] in dialogue["nodes"]
+    assert tut["return_node"] in dialogue["nodes"]
+    assert dialogue["nodes"][tut["return_node"]].get("on_end", {}).get("flow") == "to_prefire"
+    assert tut["errand_object"] in obj_ids
+    assert tut["return_zone"] in {z["id"] for z in zg["zones"]}
+
+
+def test_fire_edge_k_references(zg):
+    fire = load(CONFIG / "fire.json")
+    edge_ids = {e["id"] for e in zg["edges"]}
+    assert set(fire.get("edge_k", {})) <= edge_ids
+
+
+def test_fire_config_meets_tuning_targets(zg, scenario):
+    """명세서 4장 튜닝 목표: change fire.json freely, but these must keep holding."""
+    failures = ref_fire.check_targets(zg, load(CONFIG / "fire.json"), scenario)
+    assert not failures, "\n".join(failures)
 
 
 def test_dialogue_references():

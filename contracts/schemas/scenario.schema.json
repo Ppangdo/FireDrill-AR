@@ -26,7 +26,46 @@
       }
     },
     "initial_doors": {"type": "object", "additionalProperties": {"type": "boolean"}, "propertyNames": {"pattern": "^e_"}},
+    "door_events": {
+      "type": "array",
+      "description": "edge state changes at fixed times after ignition (e.g. a closed door burnt open)",
+      "items": {
+        "type": "object", "required": ["edge", "at_s", "action"], "additionalProperties": false,
+        "properties": {
+          "edge": {"type": "string", "pattern": "^e_"},
+          "at_s": {"type": "number", "minimum": 0},
+          "action": {"enum": ["burst_open", "open", "close"]}
+        }
+      }
+    },
     "blocked_edges": {"type": "array", "items": {"type": "string", "pattern": "^e_"}},
+    "tutorial": {
+      "type": "object", "required": ["start_node", "errand_object", "return_zone", "return_node", "max_s"], "additionalProperties": false,
+      "description": "Tutorial ends when the player enters return_zone holding errand_object (or after max_s); return_node plays, its on_end.flow moves to PreFire",
+      "properties": {
+        "start_node": {"type": "string"},
+        "errand_object": {"type": "string", "pattern": "^o_"},
+        "return_zone": {"type": "string", "pattern": "^z_"},
+        "return_node": {"type": "string"},
+        "max_s": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "tuning_targets": {
+      "type": "array",
+      "description": "what the fire config must achieve for this scenario; checked against the reference fire model (contracts/tools/ref_fire.py)",
+      "items": {
+        "type": "object", "required": ["zone", "kind", "height_m", "at_s"], "additionalProperties": false,
+        "properties": {
+          "zone": {"type": "string", "pattern": "^z_"},
+          "kind": {"enum": ["reach_below", "stay_above"]},
+          "height_m": {"type": "number", "exclusiveMinimum": 0},
+          "at_s": {"type": "number", "minimum": 0, "description": "seconds after ignition"},
+          "tolerance_s": {"type": "number", "minimum": 0},
+          "why": {"type": "string"}
+        },
+        "if": {"properties": {"kind": {"const": "reach_below"}}}, "then": {"required": ["tolerance_s"]}
+      }
+    },
     "cues": {
       "type": "array",
       "items": {

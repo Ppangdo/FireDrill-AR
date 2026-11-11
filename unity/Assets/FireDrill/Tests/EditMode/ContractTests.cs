@@ -42,6 +42,10 @@ namespace FireDrill.Tests
             Assert.AreEqual(2, s.Npcs.Count);
             Assert.AreEqual(NpcAction.GoElevator, s.Npcs.Single(n => n.Id == "npc_junho").InitialAction);
             Assert.AreEqual(CueKind.Alarm, s.Cues.Last().Cue);
+            Assert.AreEqual(Scenario.DoorAction.BurstOpen, s.DoorEvents.Single().Action);
+            Assert.AreEqual("o_document", s.Tutorial.ErrandObject);
+            Assert.AreEqual(3, s.TuningTargets.Count);
+            Assert.AreEqual(Scenario.TargetKind.StayAbove, s.TuningTargets.Last().Kind);
         }
 
         [Test]
@@ -50,6 +54,7 @@ namespace FireDrill.Tests
             var f = Load<FireConfig>("fire.json");
             Assert.AreEqual(0.1f, f.TickS, 1e-6);
             Assert.AreEqual(60f, f.Temp.PerDC);
+            Assert.AreEqual(0.01f, f.EdgeK["e_corr_sm"], 1e-6);
             Assert.AreEqual(4, f.Fed.Stages.Count);
             Assert.AreEqual(0.6f, f.Fed.Towel.Wet, 1e-6);
         }

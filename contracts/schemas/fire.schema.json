@@ -19,6 +19,10 @@
         "stair": {"type": "number", "minimum": 0}
       }
     },
+    "edge_k": {
+      "type": "object", "propertyNames": {"pattern": "^e_"}, "additionalProperties": {"type": "number", "minimum": 0},
+      "description": "per-edge spread coefficient; overrides k[type] (and door open/closed) for that edge"
+    },
     "min_layer_y": {"type": "number", "minimum": 0},
     "temp": {
       "type": "object", "required": ["base_c", "per_d_c", "origin_bonus_c"], "additionalProperties": false,

@@ -7,5 +7,6 @@
   "building_id": "demo_3f",
   "scenario_id": "s_demo_fire",
   "offline": false,
+  "skip_calibration": true,
   "language": "ko"
 }

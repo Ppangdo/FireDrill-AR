@@ -1,9 +1,10 @@
 {
   "schema_version": 1,
   "tick_s": 0.1,
-  "source_rate": 0.012,
+  "source_rate": 0.04,
   "area_ref_m2": 20,
-  "k": {"door_open": 0.15, "door_closed": 0.005, "opening": 0.25, "stair": 0.20},
+  "k": {"door_open": 0.3, "door_closed": 0.005, "opening": 0.02, "stair": 0.20},
+  "edge_k": {"e_corr_sm": 0.01},
   "min_layer_y": 0.3,
   "temp": {"base_c": 20, "per_d_c": 60, "origin_bonus_c": 200},
   "hot_door_temp_c": 60,
