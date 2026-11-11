@@ -125,6 +125,14 @@ def test_fire_config_meets_tuning_targets(zg, scenario):
     assert not failures, "\n".join(failures)
 
 
+def test_fire_trace_is_up_to_date(zg, scenario):
+    """contracts/golden/fire_demo.trace.json is what the C# FireEngine test compares against (Stage 1).
+    Regenerate with contracts/tools/gen_golden.py after changing fire.json, scenario.json or zone_graph.json."""
+    data = ref_fire.trace(zg, load(CONFIG / "fire.json"), scenario)
+    on_disk = (GOLDEN / "fire_demo.trace.json").read_text(encoding="utf-8")
+    assert on_disk.replace("\r\n", "\n") == ref_fire.trace_json(data), "run contracts/tools/gen_golden.py"
+
+
 def test_dialogue_references():
     d = load(CONFIG / "dialogue.json")
     assert d["start"] in d["nodes"]
