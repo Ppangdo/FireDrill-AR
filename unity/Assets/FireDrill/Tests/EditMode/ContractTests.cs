@@ -81,6 +81,17 @@ namespace FireDrill.Tests
             Assert.AreEqual("s_demo_fire", a.ScenarioId);
         }
 
+        [Test]
+        public void RuntimeConfig_Deserializes()
+        {
+            var r = Load<RuntimeConfig>("runtime.json");
+            Assert.AreEqual(0.1f, r.Flow.TickS, 1e-6f);
+            Assert.AreEqual(1.4f, r.Pc.WalkSpeedMps, 1e-6f);
+            Assert.AreEqual(3, r.Scene.HandleSizeM.Length);
+            Assert.AreEqual(9, r.Scene.Colors.Count);
+            Assert.AreEqual(500, r.Network.UploadBatchMax);
+        }
+
         [TestCase("model_run")]
         [TestCase("fail_run")]
         [TestCase("na_run")]

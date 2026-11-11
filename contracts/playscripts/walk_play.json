@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "name": "walk_play",
+  "time_scale": 4,
+  "start": "prefire",
+  "steps": [
+    {"do": "wait_for", "event": "CUE_EXPOSED"},
+    {"do": "walk_to", "pos": [2.6, 13.0]},
+    {"do": "intent", "kind": "handle_check", "target": "e_302_door", "hold_s": 0.5},
+    {"do": "intent", "kind": "toggle_door", "target": "e_302_door"},
+    {"do": "wait", "seconds": 0.6},
+    {"do": "walk_to", "pos": [1.0, 13.0]},
+    {"do": "walk_to", "pos": [1.0, 0.7]},
+    {"do": "intent", "kind": "handle_check", "target": "e_stair_b", "hold_s": 0.5},
+    {"do": "intent", "kind": "toggle_door", "target": "e_stair_b"},
+    {"do": "wait", "seconds": 0.6},
+    {"do": "walk_to_exit", "exit": "z_exit_stair_b"}
+  ],
+  "expect": {
+    "outcome": "escaped"
+  }
+}

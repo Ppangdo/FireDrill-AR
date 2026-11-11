@@ -2,13 +2,13 @@
 
 | 위치 | 내용 |
 | --- | --- |
-| `schemas/*.schema.json` | JSON Schema (draft 2020-12). 설정 파일 7종, 로그 이벤트, 평가 결과, 표준 로그 기대값, 플레이 스크립트 |
-| `../unity/Assets/FireDrill/Config/*.json` | 데모 설정 파일 7종 (`demo_3f`, `s_demo_fire`) |
+| `schemas/*.schema.json` | JSON Schema (draft 2020-12). 설정 파일 8종, 로그 이벤트, 평가 결과, 표준 로그 기대값, 플레이 스크립트 |
+| `../unity/Assets/FireDrill/Config/*.json` | 데모 설정 파일 8종 (`demo_3f`, `s_demo_fire`, `runtime.json`) |
 | `../unity/Assets/FireDrill/Core/Contracts/` | C# DTO·인터페이스 (`FireDrill.Core`, UnityEngine 없음) |
 | `../unity/Assets/FireDrill/Runtime/Contracts/` | 플랫폼 어댑터 인터페이스 (`IPlayerRig`, `IInteractionSource`, `ISpaceProvider`) |
 | `../server/app/schemas.py` | 서버 API Pydantic 모델 |
 | `golden/` | 표준 로그 3종 + 기대 평가, 화재 참조 궤적 `fire_demo.trace.json` (모두 `gen_golden.py`로 생성) |
-| `playscripts/` | 자동 플레이 스크립트 (15.2) |
+| `playscripts/` | 자동 플레이 스크립트 (15.2). `walk_play`는 3단계(화재 없음) 통과 조건용 |
 | `tools/gen_golden.py` | 표준 로그 생성기 (stdlib) |
 | `tools/ref_eval.py` | 참조 평가기. C# Evaluator는 이것과 같은 등급을 내야 한다 |
 | `tools/ref_fire.py` | 참조 화재 모델. C# FireEngine은 이것과 D가 0.01 안에서 같아야 하고, `fire.json`은 `scenario.json`의 `tuning_targets`를 만족해야 한다 |
@@ -16,8 +16,9 @@
 ## 검증
 
 ```
-uv run --project server python -m pytest server/tests        # 스키마·상호 참조·표준 로그·화재 궤적 + 서버 엔드포인트 (91개)
-Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults ../out/editmode.xml   # 84개
+uv run --project server python -m pytest server/tests        # 스키마·상호 참조·표준 로그·화재 궤적 + 서버 엔드포인트 (93개)
+Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults ../out/editmode.xml   # 99개
+Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResults ../out/playmode.xml               # 5개 (실제 서버를 띄움, 스크린샷 포함)
 ```
 
 `fire.json`·`scenario.json`·`zone_graph.json`을 바꾸면 `gen_golden.py`를 다시 돌려 `fire_demo.trace.json`을 갱신한다 (CI가 차이를 잡는다). C# 테스트 `FireEngineTests.MatchesReferenceModel_180s`가 이 파일과 비교한다.
@@ -52,12 +53,32 @@ Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode
 - **WebSocket 서버**: 이 PC에서 `websockets`는 설치가 막혀 순수 Python인 `wsproto`를 쓴다(`--ws wsproto`). 잘못된 메시지는 무시하고 연결은 유지한다. 재접속하면 새 소켓이 이전 것을 대신한다.
 - **Claude 호출**: NPC `claude-haiku-5-5` effort low, 리포트 `claude-sonnet-5-5` effort medium + 서버 측 fallback(`fallbacks: "default"`, 베타 `server-side-fallback-2026-07-01`). 둘 다 구조화 출력(`output_config.format`), 시스템 프롬프트 고정 + `cache_control`, SDK 재시도 0회(마감은 서버가 지킨다). `llm_calls.input_tokens`는 캐시 읽기·쓰기 토큰을 포함한다.
 
+## 3단계(걸을 수 있는 데모) 구현 메모
+
+명세서에 정해져 있지 않아 구현에서 고른 것. 코드는 `unity/Assets/FireDrill/Runtime/`, `Platform/Pc/`, `Editor/`, 테스트는 `Tests/EditMode/GameFlowTests.cs`, `Tests/PlayMode/`.
+
+- **`runtime.json` (8번째 설정 파일)**: PC 조작(16.7)·씬 생성(16.2)·GameFlow 시간·네트워크(14.6) 수치. 선 키는 `evaluation.json`의 `standing_head_m`을 그대로 쓴다. 사람이 결정(2026-11-11).
+- **어셈블리**: Bootstrap은 `FireDrill.Runtime`에 있고 플랫폼은 `PlatformRegistry`에 이름으로 등록한다(`pc`는 `FireDrill.Platform.Pc`, 테스트용 `scripted`는 Runtime의 `ScriptedPlayer`). 나중에 `quest`도 같은 방식.
+- **run 시작 시점**: 첫 시도는 Tutorial 진입 때(RUN_START → STATE_CHANGE Calibration→Tutorial), 재시도와 `start: prefire` 스크립트는 PreFire 진입 때. run_id는 서버가 주고(POST runs), 실패하거나 `run_create_wait_s` 안에 답이 없으면 로컬 GUID — 그 run은 업로드하지 않는다. `RUN_START` 전에 `RunStarting` 이벤트로 훈련자를 스폰 위치에 놓는다.
+- **기록 순서**: 매 프레임 GameFlow.Tick → FireDirector → RunRecorder(ZONE_ENTER·POSTURE·SAMPLE) → 출구 판정. 그래서 출구 ZONE_ENTER가 STATE_CHANGE Fire→Ending보다 먼저 남는다(표준 로그와 같음). 로그의 t·pos는 소수 3자리, fed·zone_d는 4자리로 반올림.
+- **3단계 가짜 구현**: 화재는 `ZeroFireEngine`(연기 0, 문 안 뜨거움). FireDirector는 틱·발화·시간 단서(sound·smell·alarm)만 하고 smoke 단서·`door_events`는 4단계. 튜토리얼 내용이 없어 Tutorial은 다음 프레임에 PreFire로 넘어간다(7단계에서 DialogueRunner). UI는 `DebugOverlay`(IMGUI, 영어 — 한글 폰트는 7단계).
+- **문은 3단계에 미리 넣음**: 스폰 방(302호)과 출구 문이 닫혀 있어 걷기만으로는 출구에 못 간다. `DoorInteractions`(Interactables의 일부)가 F 열기·닫기, H 손잡이 확인, Esc 중단을 처리하고 DOOR_OPEN/CLOSE `{edge, hot, checked_before}`·HANDLE_CHECK를 남긴다. 거리는 수평 거리로 잰다(문 중심 `interact_range_m`, 손잡이 `handle_range_m`). 문은 `from` 구역 쪽으로 열리고, 경첩은 손잡이 반대쪽 끝이다. 열린 문은 충돌체를 끈다.
+- **벽 생성**: 같은 직선 위에서 이미 만든 벽과 겹치는 구간은 빼고(부분 공유도 처리), 간선 중심이 놓인 변에서 `width`만큼 비운다. 문 위(`door_top_m`~천장)만 다시 채우고 통로(opening)는 천장까지 비운다.
+- **비상 중단**: Esc를 `abort_hold_s` 누르면 `ABORT {by: "staff"}`(PC 앞의 요원이 누른다고 봄). WebSocket abort도 같은 경로. 서버 온라인·run 중에 메시지가 `ws_ping_timeout_s` 없으면 일시정지(run 시계·이동 멈춤), 다시 오면 재개. `offline: true`면 이 규칙은 꺼진다.
+- **업로드**: `upload_interval_s`마다 같은 run의 이벤트를 최대 `upload_batch_max`개씩. 4xx는 버리고 5xx·네트워크 오류는 `retry_delays_s` 뒤 재시도, 다 실패하면 오프라인(큐 유지, `offline_probe_s`마다 /health). RUN_END 뒤 Evaluator 결과로 `/finish`를 보낸다.
+- **CharacterController**: 바닥 위로 `skinWidth`만큼 떠 있으므로 머리 높이는 (발 - skinWidth) + 자세 높이로 잰다.
+- **스크린샷**: `ScreenshotTests`가 고정 5곳을 `out/screenshots/stage3/`에 저장한다. 그래픽 장치가 필요해서 `-nographics`면 건너뛴다.
+- **프리팹 대체(16.2 `Prefabs/{kind}.prefab`)는 아직 없음**: 에셋이 들어오는 8단계에 Resources 경로로 넣는다.
+
 ## 명세서 반영 대기
 
 1. **14.6 요원 화면 보조 엔드포인트**: `GET /staff/devices` → `{schema_version, devices: [{device_id, connected, status: WsStatus|null, status_age_s}]}`. 요원 화면이 1초마다 읽는다. 9·14.6 표에 추가하면 된다.
 2. **14.6 토큰**: `?token=` 쿼리도 받는다는 것과 WebSocket 토큰·기기 짝 규칙(위 메모).
 3. **14.6 오류**: LLM 실패는 504/502가 아니라 200 + 대체 응답이라는 것(위 메모).
 4. **15.3 서버 명령**: 이 PC에서는 `uv run --project server python -m uvicorn app.main:app --app-dir server --host 0.0.0.0 --port 8000 --ws wsproto`, 테스트는 `uv run --project server python -m pytest server/tests`.
+5. **14.5 설정 파일 표**: `runtime.json`(주인: AI 튜닝, 읽는 쪽: Runtime·Platform.Pc, 내용: PC 조작·씬 생성·흐름 시간·네트워크 수치) 행 추가, "7종" → "8종". 14장 첫 표의 스키마 "11종" → "12종".
+6. **15.3 AI 실행 환경**: PlayMode 명령(`-nographics` 없이 돌리면 스크린샷까지), 프로젝트 설정 `Unity -batchmode -quit -projectPath unity -executeMethod FireDrill.Editor.ProjectSetup.Run`, 빌드 `... -executeMethod FireDrill.Editor.Build.Pc`(→ `unity/Builds/Pc/FireDrill.exe`).
+7. **15장 3단계 행**: 가짜 구현에 "튜토리얼(바로 PreFire)"을 더하고, 문 열기·닫기는 3단계에 들어왔다는 것.
 
 ## 명세서 반영 완료 (2026-11-11)
 

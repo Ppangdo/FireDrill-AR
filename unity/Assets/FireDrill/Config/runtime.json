@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "pc": {
+    "walk_speed_mps": 1.4,
+    "crouch_speed_mps": 0.7,
+    "crouch_head_m": 0.9,
+    "posture_switch_s": 0.3,
+    "body_radius_m": 0.25,
+    "mouse_sensitivity_deg": 0.12,
+    "pitch_limit_deg": 80,
+    "interact_range_m": 1.5,
+    "handle_range_m": 1.0,
+    "handle_hold_s": 0.5,
+    "faucet_hold_s": 2.0,
+    "abort_hold_s": 2.0
+  },
+  "scene": {
+    "wall_thickness_m": 0.1,
+    "door_thickness_m": 0.05,
+    "door_top_m": 2.1,
+    "door_swing_s": 0.5,
+    "handle_size_m": [
+      0.12,
+      0.03,
+      0.03
+    ],
+    "exit_sign_size_m": [
+      0.6,
+      0.25,
+      0.05
+    ],
+    "exit_sign_height_m": 2.3,
+    "light_intensity": 1.2,
+    "light_range_m": 12,
+    "colors": {
+      "corridor": "#D9D9D9",
+      "room": "#E6D8B8",
+      "elevator_lobby": "#CFE2F3",
+      "exit": "#3FA34D",
+      "wall": "#EFEFEF",
+      "ceiling": "#F7F7F7",
+      "door": "#8D6E63",
+      "handle": "#B0B0B0",
+      "exit_sign": "#00E676"
+    },
+    "objects": {
+      "towel": {
+        "shape": "box",
+        "size_m": [
+          0.3,
+          0.05,
+          0.2
+        ],
+        "color": "#FFFFFF"
+      },
+      "extinguisher": {
+        "shape": "cylinder",
+        "size_m": [
+          0.15,
+          0.5,
+          0.15
+        ],
+        "color": "#D32F2F"
+      },
+      "phone": {
+        "shape": "box",
+        "size_m": [
+          0.08,
+          0.01,
+          0.16
+        ],
+        "color": "#212121"
+      },
+      "document": {
+        "shape": "box",
+        "size_m": [
+          0.21,
+          0.02,
+          0.3
+        ],
+        "color": "#FDD835"
+      },
+      "bag": {
+        "shape": "box",
+        "size_m": [
+          0.35,
+          0.25,
+          0.15
+        ],
+        "color": "#795548"
+      },
+      "alarm": {
+        "shape": "box",
+        "size_m": [
+          0.1,
+          0.15,
+          0.2
+        ],
+        "color": "#E53935"
+      },
+      "faucet": {
+        "shape": "box",
+        "size_m": [
+          0.5,
+          0.3,
+          0.4
+        ],
+        "color": "#9E9E9E"
+      },
+      "elevator_button": {
+        "shape": "box",
+        "size_m": [
+          0.1,
+          0.2,
+          0.12
+        ],
+        "color": "#B0BEC5"
+      },
+      "window": {
+        "shape": "box",
+        "size_m": [
+          0.05,
+          1.0,
+          1.2
+        ],
+        "color": "#90CAF9"
+      }
+    }
+  },
+  "flow": {
+    "tick_s": 0.1,
+    "sample_interval_s": 1.0,
+    "ending_s": 3.0,
+    "run_create_wait_s": 3.0
+  },
+  "network": {
+    "request_timeout_s": 5,
+    "upload_interval_s": 2,
+    "upload_batch_max": 500,
+    "retry_delays_s": [
+      1,
+      2,
+      4
+    ],
+    "offline_probe_s": 10,
+    "ws_status_interval_s": 1,
+    "ws_ping_timeout_s": 5,
+    "ws_reconnect_s": 2
+  }
+}

@@ -38,7 +38,7 @@ def assert_valid(v: Draft202012Validator, doc, label: str) -> None:
     assert not errors, label + ":\n" + "\n".join(f"  {list(e.absolute_path)}: {e.message}" for e in errors)
 
 
-CONFIG_FILES = ["zone_graph", "scenario", "fire", "evaluation", "dialogue", "npc_cache", "app_config"]
+CONFIG_FILES = ["zone_graph", "scenario", "fire", "evaluation", "dialogue", "npc_cache", "app_config", "runtime"]
 GOLDEN_NAMES = ["model_run", "fail_run", "na_run"]
 
 
