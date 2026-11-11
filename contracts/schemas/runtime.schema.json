@@ -1,0 +1,333 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "runtime.schema.json",
+  "title": "Runtime tuning: PC controls, scene building, flow timing, networking (명세서 10·14.6·16.2·16.7)",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "pc",
+    "scene",
+    "flow",
+    "network"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "pos": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "nonneg": {
+      "type": "number",
+      "minimum": 0
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "size3": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/pos"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "shape": {
+      "type": "object",
+      "required": [
+        "shape",
+        "size_m",
+        "color"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "enum": [
+            "box",
+            "cylinder"
+          ]
+        },
+        "size_m": {
+          "$ref": "#/$defs/size3"
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        }
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "pc": {
+      "type": "object",
+      "description": "16.7 PC controls. Standing head height is evaluation.json standing_head_m.",
+      "required": [
+        "walk_speed_mps",
+        "crouch_speed_mps",
+        "crouch_head_m",
+        "posture_switch_s",
+        "body_radius_m",
+        "mouse_sensitivity_deg",
+        "pitch_limit_deg",
+        "interact_range_m",
+        "handle_range_m",
+        "handle_hold_s",
+        "faucet_hold_s",
+        "abort_hold_s"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "walk_speed_mps": {
+          "$ref": "#/$defs/pos"
+        },
+        "crouch_speed_mps": {
+          "$ref": "#/$defs/pos"
+        },
+        "crouch_head_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "posture_switch_s": {
+          "$ref": "#/$defs/nonneg"
+        },
+        "body_radius_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "mouse_sensitivity_deg": {
+          "$ref": "#/$defs/pos",
+          "description": "degrees per mouse delta unit"
+        },
+        "pitch_limit_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90
+        },
+        "interact_range_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "handle_range_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "handle_hold_s": {
+          "$ref": "#/$defs/nonneg"
+        },
+        "faucet_hold_s": {
+          "$ref": "#/$defs/nonneg"
+        },
+        "abort_hold_s": {
+          "$ref": "#/$defs/nonneg"
+        }
+      }
+    },
+    "scene": {
+      "type": "object",
+      "description": "16.2 SceneBuilder",
+      "required": [
+        "wall_thickness_m",
+        "door_thickness_m",
+        "door_top_m",
+        "door_swing_s",
+        "handle_size_m",
+        "exit_sign_size_m",
+        "exit_sign_height_m",
+        "light_intensity",
+        "light_range_m",
+        "colors",
+        "objects"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "wall_thickness_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "door_thickness_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "door_top_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "door_swing_s": {
+          "$ref": "#/$defs/nonneg"
+        },
+        "handle_size_m": {
+          "$ref": "#/$defs/size3"
+        },
+        "exit_sign_size_m": {
+          "$ref": "#/$defs/size3"
+        },
+        "exit_sign_height_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "light_intensity": {
+          "$ref": "#/$defs/nonneg"
+        },
+        "light_range_m": {
+          "$ref": "#/$defs/pos"
+        },
+        "colors": {
+          "type": "object",
+          "required": [
+            "corridor",
+            "room",
+            "elevator_lobby",
+            "exit",
+            "wall",
+            "ceiling",
+            "door",
+            "handle",
+            "exit_sign"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "corridor": {
+              "$ref": "#/$defs/color"
+            },
+            "room": {
+              "$ref": "#/$defs/color"
+            },
+            "elevator_lobby": {
+              "$ref": "#/$defs/color"
+            },
+            "exit": {
+              "$ref": "#/$defs/color"
+            },
+            "wall": {
+              "$ref": "#/$defs/color"
+            },
+            "ceiling": {
+              "$ref": "#/$defs/color"
+            },
+            "door": {
+              "$ref": "#/$defs/color"
+            },
+            "handle": {
+              "$ref": "#/$defs/color"
+            },
+            "exit_sign": {
+              "$ref": "#/$defs/color"
+            }
+          }
+        },
+        "objects": {
+          "type": "object",
+          "description": "16.10 placeholder shapes per object kind (box or cylinder; size = x, y, z)",
+          "required": [
+            "towel",
+            "extinguisher",
+            "phone",
+            "document",
+            "bag",
+            "alarm",
+            "faucet",
+            "elevator_button",
+            "window"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "towel": {
+              "$ref": "#/$defs/shape"
+            },
+            "extinguisher": {
+              "$ref": "#/$defs/shape"
+            },
+            "phone": {
+              "$ref": "#/$defs/shape"
+            },
+            "document": {
+              "$ref": "#/$defs/shape"
+            },
+            "bag": {
+              "$ref": "#/$defs/shape"
+            },
+            "alarm": {
+              "$ref": "#/$defs/shape"
+            },
+            "faucet": {
+              "$ref": "#/$defs/shape"
+            },
+            "elevator_button": {
+              "$ref": "#/$defs/shape"
+            },
+            "window": {
+              "$ref": "#/$defs/shape"
+            }
+          }
+        }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "description": "5장 GameFlow timing",
+      "required": [
+        "tick_s",
+        "sample_interval_s",
+        "ending_s",
+        "run_create_wait_s"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "tick_s": {
+          "const": 0.1,
+          "description": "fire/FED fixed tick (14.1)"
+        },
+        "sample_interval_s": {
+          "$ref": "#/$defs/pos"
+        },
+        "ending_s": {
+          "$ref": "#/$defs/nonneg"
+        },
+        "run_create_wait_s": {
+          "$ref": "#/$defs/pos",
+          "description": "max wait for the server run_id before using a local one"
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "description": "14.6 client behaviour",
+      "required": [
+        "request_timeout_s",
+        "upload_interval_s",
+        "upload_batch_max",
+        "retry_delays_s",
+        "offline_probe_s",
+        "ws_status_interval_s",
+        "ws_ping_timeout_s",
+        "ws_reconnect_s"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "request_timeout_s": {
+          "$ref": "#/$defs/pos"
+        },
+        "upload_interval_s": {
+          "$ref": "#/$defs/pos"
+        },
+        "upload_batch_max": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "retry_delays_s": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonneg"
+          }
+        },
+        "offline_probe_s": {
+          "$ref": "#/$defs/pos"
+        },
+        "ws_status_interval_s": {
+          "$ref": "#/$defs/pos"
+        },
+        "ws_ping_timeout_s": {
+          "$ref": "#/$defs/pos"
+        },
+        "ws_reconnect_s": {
+          "$ref": "#/$defs/pos"
+        }
+      }
+    }
+  }
+}

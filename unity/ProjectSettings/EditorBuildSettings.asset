@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/FireDrill/Scenes/Bootstrap.unity
+    guid: aaa3e5ef25b22a8418ff1b8ea2a58b72
   m_configObjects: {}

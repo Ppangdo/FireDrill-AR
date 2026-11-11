@@ -35,6 +35,9 @@ Unity 경로: `C:\Program Files\Unity\Hub\Editor\6000.6.8f1\Editor\Unity.exe` (�
 | --- | --- |
 | 컴파일 확인 | `Unity -batchmode -quit -nographics -projectPath unity -logFile out/compile.log` 후 로그에서 `error CS` 검색 |
 | EditMode 테스트 | `Unity -batchmode -nographics -projectPath unity -runTests -testPlatform EditMode -testResults ../out/editmode.xml -logFile out/editmode.log` (`-testResults`는 `unity/` 기준 경로) |
+| PlayMode 테스트 | `Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResults ../out/playmode.xml -logFile out/playmode.log` (실제 서버를 띄운다. `-nographics`를 빼야 `out/screenshots/`에 스크린샷이 생긴다) |
+| 프로젝트 설정 | `Unity -batchmode -quit -projectPath unity -executeMethod FireDrill.Editor.ProjectSetup.Run` (URP 에셋·Bootstrap 씬 생성) |
+| PC 빌드 | `Unity -batchmode -quit -projectPath unity -executeMethod FireDrill.Editor.Build.Pc` → `unity/Builds/Pc/FireDrill.exe` |
 | 계약·서버 테스트(Python) | `uv run --project server python -m pytest server/tests` |
 | 표준 로그 재생성 | `uv run --project server python contracts/tools/gen_golden.py` |
 | 참조 평가기 | `uv run --project server python contracts/tools/ref_eval.py` |

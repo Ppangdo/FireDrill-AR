@@ -1,0 +1,20 @@
+{
+    "name": "FireDrill.Platform.Pc",
+    "rootNamespace": "FireDrill.Platform.Pc",
+    "references": [
+        "FireDrill.Core",
+        "FireDrill.Runtime",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
