@@ -1,52 +1,86 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="Hud.uss" />
     <!-- 16.11 screens. Report is ReportView.uxml. Texts that depend on data are filled from C# (UiRoot.cs). -->
     <ui:VisualElement name="ui-root" class="root" picking-mode="Ignore">
 
         <!-- HUD: no minimap, direction or health gauge during the fire (16.11) -->
-        <ui:VisualElement name="hud" class="hud" picking-mode="Ignore">
+        <ui:VisualElement name="hud" style="display: none;" class="hud" picking-mode="Ignore">
             <ui:Label name="paused" class="banner" text="서버 연결을 확인하는 중입니다. 훈련이 잠시 멈췄습니다." />
+            <ui:Label name="objective" class="objective" picking-mode="Ignore" />
+            <ui:VisualElement name="reticle" class="reticle" picking-mode="Ignore" />
             <ui:Label name="prompt" class="prompt" />
             <ui:Label name="subtitle" class="subtitle" />
-            <ui:Label name="inventory" class="inventory" />
+            <ui:VisualElement name="inventory" class="inventory" picking-mode="Ignore">
+                <ui:VisualElement class="inventory-slots" picking-mode="Ignore">
+                    <ui:VisualElement class="inventory-slot held" picking-mode="Ignore">
+                        <ui:Label text="손 · 현재 들고 있음" class="slot-title" />
+                        <ui:Label name="hand-item" class="slot-item" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="inventory-slot" picking-mode="Ignore">
+                        <ui:Label text="Z · 가방 1 교체" class="slot-title" />
+                        <ui:Label name="bag1-item" class="slot-item" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="inventory-slot" picking-mode="Ignore">
+                        <ui:Label text="X · 가방 2 교체" class="slot-title" />
+                        <ui:Label name="bag2-item" class="slot-item" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Label name="item-help" class="item-help" />
+                <ui:Label name="towel-help" class="item-help towel-help" />
+            </ui:VisualElement>
             <ui:Label name="abort-hold" class="abort-hold" />
         </ui:VisualElement>
 
         <!-- dialogue: bottom third, speaker + text + up to 3 choices (number keys 1-3 or click) -->
-        <ui:VisualElement name="dialogue" class="dialogue">
+        <ui:VisualElement name="dialogue" style="display: none;" class="dialogue">
             <ui:Label name="speaker" class="speaker" />
             <ui:Label name="line" class="line" />
             <ui:VisualElement name="choices" class="choices" />
         </ui:VisualElement>
 
         <!-- start: after Boot. Participant code, briefing (failure scene, how to stop), controls, server status -->
-        <ui:VisualElement name="start" class="screen">
-            <ui:VisualElement class="card">
-                <ui:Label text="화재 대피 훈련" class="title" />
-                <ui:Label class="para" text="건물 3층에서 평소처럼 지내다가 화재를 겪게 됩니다. 무엇을 해야 할지는 알려 주지 않습니다. 스스로 판단해 안전하게 대피해 보세요." />
-                <ui:Label class="para warn" text="연기를 오래 마시면 화면이 어두워지고 흐려지다가 쓰러지는 장면이 나옵니다. 실제 위험은 없습니다." />
-                <ui:Label class="para warn" text="언제든 중단할 수 있습니다: Esc 키를 2초 동안 누르거나, 안전요원에게 말하세요." />
-                <ui:Label class="section" text="조작" />
-                <ui:Label class="para small" text="WASD 이동 · 마우스 둘러보기 · C 자세 낮추기 · E 줍기·사용·말 걸기 · F 문 열기·닫기 · H 손잡이 확인(0.5초) · T 수건을 코·입에 대기 · G 버리기 · 마우스 왼쪽 소화기 · 1~3 대화 선택" />
-                <ui:VisualElement class="row">
-                    <ui:Label text="참가자 코드" class="field-label" />
-                    <ui:TextField name="code" max-length="16" class="field" />
+        <ui:VisualElement name="start" style="display: none;" class="screen">
+            <ui:VisualElement class="start-card">
+                <ui:VisualElement class="start-header">
+                    <ui:Label text="화재 대피 훈련" class="title" />
+                    <ui:Label name="server" class="server" />
                 </ui:VisualElement>
-                <ui:Label name="code-hint" class="para small" text="실명은 쓰지 않습니다. 안내받은 코드를 입력하세요." />
-                <ui:Label name="server" class="server" />
-                <ui:VisualElement class="row end">
-                    <ui:Button name="begin" text="요원 확인 · 훈련 시작" class="button primary" />
+                <ui:VisualElement class="start-body">
+                    <ui:VisualElement class="briefing">
+                        <ui:Label class="para" text="건물 3층에서 화재 상황을 경험합니다. 주변을 살피고 스스로 판단해 대피하세요." />
+                        <ui:VisualElement class="safety-box">
+                            <ui:Label text="비상 중단" class="section safety-title" />
+                            <ui:Label class="para small" text="Esc를 2초 동안 누르거나 안전요원에게 말하세요." />
+                            <ui:Label class="para small" text="연기에 오래 노출되면 화면이 흐려지고 쓰러지는 연출이 나옵니다." />
+                        </ui:VisualElement>
+                        <ui:Label text="참가자 코드" class="field-label" />
+                        <ui:TextField name="code" max-length="16" class="field" />
+                        <ui:Label name="code-hint" class="para small" text="실명 대신 안내받은 코드를 입력하세요." />
+                        <ui:Button name="begin" text="요원 확인 · 훈련 시작" class="button primary start-button" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="controls">
+                        <ui:Label text="조작 방법" class="section" />
+                        <ui:Label text="WASD   이동" class="control-line" />
+                        <ui:Label text="마우스   둘러보기" class="control-line" />
+                        <ui:Label text="E   줍기 · 사용 · 대화" class="control-line" />
+                        <ui:Label text="F / H   문 열기 / 손잡이 확인" class="control-line" />
+                        <ui:Label text="Z / X   손 ↔ 가방 1 / 2 교체" class="control-line" />
+                        <ui:Label text="C / T / G   자세 / 수건 / 버리기" class="control-line" />
+                        <ui:Label text="마우스 왼쪽   소화기 분사" class="control-line" />
+                        <ui:Label text="1–3 또는 클릭   대화 선택" class="control-line" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- ending: result line, elapsed time, smoke at the last position -->
-        <ui:VisualElement name="ending" class="screen dim" picking-mode="Ignore">
+        <ui:VisualElement name="ending" style="display: none;" class="screen dim" picking-mode="Ignore">
             <ui:Label name="ending-title" class="title big" />
             <ui:Label name="ending-detail" class="para center" />
         </ui:VisualElement>
 
         <!-- aborted -->
-        <ui:VisualElement name="aborted" class="screen">
+        <ui:VisualElement name="aborted" style="display: none;" class="screen">
             <ui:VisualElement class="card small-card">
                 <ui:Label text="훈련이 중단되었습니다" class="title" />
                 <ui:Label class="para" text="안전요원의 안내를 따라 주세요." />

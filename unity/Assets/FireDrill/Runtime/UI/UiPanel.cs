@@ -10,7 +10,7 @@ namespace FireDrill.Runtime
     {
         public const string ResourceDir = "FireDrillUI/";
 
-        public static UIDocument Create(GameObject host, RuntimeConfig.UiSettings ui, string uxml, string uss, int sortingOrder,
+        public static UIDocument Create(GameObject host, RuntimeConfig.UiSettings ui, string uxml, int sortingOrder,
                                         out PanelSettings panel)
         {
             panel = ScriptableObject.CreateInstance<PanelSettings>();
@@ -27,7 +27,6 @@ namespace FireDrill.Runtime
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>(ResourceDir + uxml);
             host.SetActive(true);
 
-            doc.rootVisualElement.styleSheets.Add(Resources.Load<StyleSheet>(ResourceDir + uss));
             var font = UiFont.Load(ui);
             if (font != null) doc.rootVisualElement.style.unityFontDefinition = FontDefinition.FromSDFFont(font);
             return doc;

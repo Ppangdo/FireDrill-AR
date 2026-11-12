@@ -122,7 +122,7 @@ namespace FireDrill.Runtime
             _head = Mathf.MoveTowards(_head, _headTarget, rate * dt);
             SetBodyHeight();
 
-            if (Finished || Error != null || _step < 0 || !InputEnabled) return;
+            if (Finished || Error != null || _step < 0 || !InputEnabled || _boot.Items.Busy) return;
             if (_step >= _script.Steps.Count) { Done(); return; }
             var step = _script.Steps[_step];
             if (!_stepStarted) { StartStep(step); _stepStarted = true; }

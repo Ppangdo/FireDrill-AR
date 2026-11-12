@@ -26,6 +26,11 @@ namespace FireDrill.Tests.PlayMode
             var cfg = ConfigSet.Load();
             var root = new GameObject("Root");
             var view = SceneBuilder.Build(cfg.Graph, cfg.Runtime.Scene, root.transform);
+            var signs = view.GetComponentsInChildren<TextMesh>();
+            foreach (var room in new[] { "301", "302", "303" })
+                Assert.IsTrue(signs.Any(sign => sign.text == room), "room sign " + room);
+            Assert.IsTrue(signs.Any(sign => sign.text == "WATER"), "faucet sign");
+            Assert.IsTrue(signs.All(sign => sign.GetComponent<Renderer>().sharedMaterial.shader.name == "FireDrill/WorldText"));
             yield return new WaitForFixedUpdate(); // colliders registered
 
             var graph = cfg.Graph;

@@ -16,7 +16,7 @@ namespace FireDrill.Runtime
         void Teleport(Vec3 feet, float yawDeg);
     }
 
-    public enum IntentKind { Use, Grab, Drop, HandleCheck, ToggleDoor, TalkTo, TowelToggle, Abort }
+    public enum IntentKind { Use, Grab, Drop, HandleCheck, ToggleDoor, TalkTo, TowelToggle, Abort, SwapBag1, SwapBag2 }
 
     /// <summary>A resolved player intention: target already chosen by the platform adapter.</summary>
     public readonly struct Intent
@@ -39,6 +39,17 @@ namespace FireDrill.Runtime
         event Action<Intent> IntentRaised;
         /// <summary>Target under the crosshair/hand for the interaction prompt, or null.</summary>
         string FocusedTargetId { get; }
+    }
+
+    /// <summary>Optional progress feedback for a platform's held-use gesture.</summary>
+    public interface IHeldUseFeedback
+    {
+        float HeldUseSeconds { get; }
+    }
+
+    public interface IContinuousSprayInput
+    {
+        bool SprayHeld { get; }
     }
 
     /// <summary>Maps building coordinates to world coordinates. PC: identity, always ready.</summary>

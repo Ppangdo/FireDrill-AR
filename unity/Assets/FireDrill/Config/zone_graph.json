@@ -5,11 +5,11 @@
   "anchors": {"A": [0, 0, 0], "B": [0, 0, 20]},
   "zones": [
     {"id": "z_corr_s", "type": "corridor", "name": "남쪽 복도", "polygon": [[0, 0], [2, 0], [2, 8], [0, 8]], "ceiling_h": 2.6,
-     "objects": [{"id": "o_ext_corr_s", "kind": "extinguisher", "pos": [0.05, 0.5, 6]}]},
+     "objects": [{"id": "o_ext_corr_s", "kind": "extinguisher", "pos": [0.18, 0.5, 6]}]},
     {"id": "z_corr_m", "type": "corridor", "name": "중간 복도", "polygon": [[0, 8], [2, 8], [2, 16], [0, 16]], "ceiling_h": 2.6,
      "objects": [{"id": "o_alarm_corr_m", "kind": "alarm", "pos": [1.95, 1.2, 9]}]},
     {"id": "z_corr_n", "type": "corridor", "name": "북쪽 복도", "polygon": [[0, 16], [2, 16], [2, 24], [0, 24]], "ceiling_h": 2.6,
-     "objects": [{"id": "o_ext_corr_n", "kind": "extinguisher", "pos": [0.05, 0.5, 17]}]},
+     "objects": [{"id": "o_ext_corr_n", "kind": "extinguisher", "pos": [0.18, 0.5, 17]}]},
     {"id": "z_exit_stair_b", "type": "exit", "name": "남쪽 계단", "polygon": [[0, -3], [2, -3], [2, 0], [0, 0]], "ceiling_h": 2.6, "objects": []},
     {"id": "z_exit_stair_a", "type": "exit", "name": "북쪽 계단", "polygon": [[0, 24], [2, 24], [2, 27], [0, 27]], "ceiling_h": 2.6, "objects": []},
     {"id": "z_elev_lobby", "type": "elevator_lobby", "name": "엘리베이터 로비", "polygon": [[-4, 10], [0, 10], [0, 14], [-4, 14]], "ceiling_h": 2.6,

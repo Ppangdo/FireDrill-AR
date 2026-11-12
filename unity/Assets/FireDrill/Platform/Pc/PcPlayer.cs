@@ -8,7 +8,7 @@ namespace FireDrill.Platform.Pc
 {
     /// <summary>PC trainee (명세서 10장, 16.7): CharacterController body, first-person camera, keyboard and mouse.
     /// Raises intents for the target under the screen centre; range and rules are checked by Interactables.</summary>
-    public sealed class PcPlayer : MonoBehaviour, IPlatform, IPlayerRig, IInteractionSource
+    public sealed class PcPlayer : MonoBehaviour, IPlatform, IPlayerRig, IInteractionSource, IHeldUseFeedback, IContinuousSprayInput
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Register() => PlatformRegistry.Register("pc", Create);
@@ -24,10 +24,12 @@ namespace FireDrill.Platform.Pc
 
         private RuntimeConfig.PcControls _pc;
         private BuildingView _building;
+        private ZoneGraph _graph;
+        private string _handleTarget, _useTarget;
         private CharacterController _body;
         private Camera _camera;
         private float _standing, _head, _headTarget, _pitch;
-        private float _hHeld, _escHeld, _eHeld, _sprayHeld;
+        private float _hHeld, _escHeld, _eHeld;
         private bool _hFired, _escFired, _eFired;
         private float _shakeDeg, _shakeHz;
         private bool _inputEnabled;
@@ -44,9 +46,11 @@ namespace FireDrill.Platform.Pc
         public float StandingHeight => _standing;
         public event Action<Intent> IntentRaised;
         public string FocusedTargetId { get; private set; }
+        public bool SprayHeld { get; private set; }
+        public float HeldUseSeconds => !_eFired && IsKind(_useTarget, ObjectKind.Faucet) ? _eHeld : 0f;
         public event Action<int> ChoiceKey;
         public event Action DebugToggle;
-        private bool _uiFocus;
+        private bool _uiFocus = true;
 
         public bool UiFocus
         {
@@ -55,7 +59,7 @@ namespace FireDrill.Platform.Pc
             {
                 if (_uiFocus == value) return;
                 _uiFocus = value;
-                if (_inputEnabled) { Cursor.lockState = value ? CursorLockMode.None : CursorLockMode.Locked; Cursor.visible = value; }
+                ApplyCursor(value);
             }
         }
 
@@ -68,15 +72,21 @@ namespace FireDrill.Platform.Pc
         public bool InputEnabled
         {
             get => _inputEnabled;
-            set
-            {
-                if (_inputEnabled == value) return;
-                _inputEnabled = value;
-                bool locked = value && !_uiFocus;
-                Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
-                Cursor.visible = !locked;
-            }
+            set => _inputEnabled = value;
         }
+
+        private static void ApplyCursor(bool show)
+        {
+            Cursor.lockState = show ? CursorLockMode.None : CursorLockMode.Locked;
+            Cursor.visible = show;
+        }
+
+        private void LateUpdate()
+        {
+            if (_uiFocus && (Cursor.lockState != CursorLockMode.None || !Cursor.visible)) ApplyCursor(true);
+        }
+
+        private void OnDisable() => ApplyCursor(true);
 
         public void Teleport(Vec3 feet, float yawDeg)
         {
@@ -90,6 +100,7 @@ namespace FireDrill.Platform.Pc
         {
             _pc = ctx.Config.Runtime.Pc;
             _building = ctx.Building;
+            _graph = ctx.Config.Graph;
             _standing = ctx.Config.Evaluation.StandingHeadM;
             _head = _headTarget = _standing;
             _body = gameObject.AddComponent<CharacterController>();
@@ -102,6 +113,7 @@ namespace FireDrill.Platform.Pc
             camGo.AddComponent<AudioListener>();
             camGo.tag = "MainCamera";
             ApplyHead();
+            ApplyCursor(true);
         }
 
         // ---- per frame ---------------------------------------------------------
@@ -125,9 +137,22 @@ namespace FireDrill.Platform.Pc
             _head = Mathf.MoveTowards(_head, _headTarget, rate * dt);
             ApplyHead();
 
-            if (!InputEnabled || kb == null) { FocusedTargetId = null; return; }
+            if (!InputEnabled || kb == null)
+            {
+                FocusedTargetId = null;
+                SprayHeld = false;
+                _handleTarget = _useTarget = null;
+                _eHeld = 0f;
+                _eFired = kb != null && kb.eKey.isPressed;
+                _hHeld = 0f;
+                _hFired = false;
+                return;
+            }
 
-            if (mouse != null && !_uiFocus)
+            bool captureClick = mouse != null && !_uiFocus &&
+                Cursor.lockState != CursorLockMode.Locked && mouse.leftButton.wasPressedThisFrame;
+            if (captureClick) ApplyCursor(false);
+            if (mouse != null && !_uiFocus && Cursor.lockState == CursorLockMode.Locked && !captureClick)
             {
                 var d = mouse.delta.ReadValue() * _pc.MouseSensitivityDeg;
                 transform.Rotate(0f, d.x, 0f, UnityEngine.Space.Self);
@@ -151,56 +176,188 @@ namespace FireDrill.Platform.Pc
             if (kb.cKey.wasPressedThisFrame) _headTarget = _headTarget < _standing ? _standing : _pc.CrouchHeadM;
 
             FocusedTargetId = Raycast();
+            var nearbyHandle = FindHandle(FocusedTargetId);
+            FocusedTargetId ??= nearbyHandle;
             if (kb.fKey.wasPressedThisFrame && IsDoor(FocusedTargetId)) Raise(IntentKind.ToggleDoor, FocusedTargetId);
-            // E: pick up / use / talk. The faucet needs E held faucet_hold_s (16.7).
-            if (kb.eKey.isPressed && FocusedTargetId != null && !IsDoor(FocusedTargetId))
-            {
-                _eHeld += dt;
-                if (!_eFired)
-                {
-                    if (FocusedTargetId.StartsWith("npc_")) { _eFired = true; Raise(IntentKind.TalkTo, FocusedTargetId); }
-                    else if (IsKind(FocusedTargetId, ObjectKind.Faucet))
-                    {
-                        if (_eHeld >= _pc.FaucetHoldS) { _eFired = true; Raise(IntentKind.Use, FocusedTargetId, _eHeld); }
-                    }
-                    else if (FocusedTargetId != ItemInteractions.FireTarget)
-                    {
-                        _eFired = true;
-                        Raise(IsPickable(FocusedTargetId) ? IntentKind.Grab : IntentKind.Use, FocusedTargetId);
-                    }
-                }
-            }
-            else { _eHeld = 0; _eFired = false; }
+            UpdateUse(kb.eKey.isPressed, dt);
 
-            // Extinguisher: hold the left mouse button; the spray time is reported on release.
-            if (mouse != null && mouse.leftButton.isPressed && !_uiFocus) _sprayHeld += dt;
-            else if (_sprayHeld > 0f) { Raise(IntentKind.Use, ItemInteractions.FireTarget, _sprayHeld); _sprayHeld = 0f; }
+            SprayHeld = mouse != null && mouse.leftButton.isPressed && !_uiFocus &&
+                Cursor.lockState == CursorLockMode.Locked && !captureClick;
 
             if (kb.digit1Key.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame) ChoiceKey?.Invoke(0);
             if (kb.digit2Key.wasPressedThisFrame) ChoiceKey?.Invoke(1);
             if (kb.digit3Key.wasPressedThisFrame) ChoiceKey?.Invoke(2);
             if (kb.tKey.wasPressedThisFrame) Raise(IntentKind.TowelToggle);
             if (kb.gKey.wasPressedThisFrame) Raise(IntentKind.Drop);
+            if (kb.zKey.wasPressedThisFrame) Raise(IntentKind.SwapBag1);
+            if (kb.xKey.wasPressedThisFrame) Raise(IntentKind.SwapBag2);
 
-            if (kb.hKey.isPressed && IsDoor(FocusedTargetId))
+            if (!kb.hKey.isPressed || _uiFocus)
             {
-                _hHeld += dt;
-                if (!_hFired && _hHeld >= _pc.HandleHoldS) { _hFired = true; Raise(IntentKind.HandleCheck, FocusedTargetId, _hHeld); }
+                _handleTarget = null;
+                _hHeld = 0f;
+                _hFired = false;
             }
-            else { _hHeld = 0; _hFired = false; }
+            else if (!_hFired)
+            {
+                if (_handleTarget != nearbyHandle)
+                {
+                    _handleTarget = nearbyHandle;
+                    _hHeld = 0f;
+                }
+                if (_handleTarget != null)
+                {
+                    _hHeld += dt;
+                    if (_hHeld >= _pc.HandleHoldS)
+                    {
+                        _hFired = true;
+                        Raise(IntentKind.HandleCheck, _handleTarget, _hHeld);
+                    }
+                }
+            }
+        }
+
+        private void UpdateUse(bool pressed, float dt)
+        {
+            if (!pressed || _uiFocus)
+            {
+                _useTarget = null;
+                _eHeld = 0f;
+                _eFired = pressed;
+                return;
+            }
+
+            if (_eFired) return;
+            if (IsKind(_useTarget, ObjectKind.Faucet))
+            {
+                // Keep the selected faucet through small camera movements while it is reachable.
+                if (!CanContinueFaucetUse(_useTarget))
+                {
+                    _useTarget = null;
+                    _eHeld = 0f;
+                    _eFired = true;
+                    return;
+                }
+                FocusedTargetId = _useTarget;
+            }
+            else
+            {
+                _useTarget = FocusedTargetId;
+                if (_useTarget == null || IsDoor(_useTarget) || _useTarget == ItemInteractions.FireTarget) return;
+            }
+
+            if (IsKind(_useTarget, ObjectKind.Faucet))
+            {
+                _eHeld += dt;
+                if (_eHeld < _pc.FaucetHoldS) return;
+                _eFired = true;
+                Raise(IntentKind.Use, _useTarget, _eHeld);
+                return;
+            }
+
+            _eFired = true;
+            if (_useTarget.StartsWith("npc_")) Raise(IntentKind.TalkTo, _useTarget);
+            else Raise(IsPickable(_useTarget) ? IntentKind.Grab : IntentKind.Use, _useTarget);
+        }
+
+        private bool CanContinueFaucetUse(string id)
+        {
+            if (!_building.Objects.TryGetValue(id, out var item) || !item.Go.activeInHierarchy ||
+                !item.Go.TryGetComponent<Collider>(out var collider)) return false;
+            var origin = _camera.transform.position;
+            var centerOffset = collider.bounds.center - origin;
+            return Vector3.Dot(_camera.transform.forward, centerOffset) > 0f &&
+                CanSeeItem(origin, centerOffset, collider, _pc.InteractRangeM);
+        }
+
+        private string FindHandle(string focusedId)
+        {
+            var head = Head;
+            var zone = _graph.ZoneAt(head);
+            if (zone == null) return null;
+
+            string nearest = null;
+            float bestDistance = float.MaxValue;
+            var forward = _camera.transform.forward;
+            foreach (var edge in _graph.EdgesOf(zone))
+            {
+                if (edge.Type != EdgeType.Door) continue;
+                var handle = edge.Handle ?? new Vec3(edge.Center.X, 1f, edge.Center.Z);
+                var distance = Vec2.Distance(head.Xz, handle.Xz);
+                if (distance > _pc.HandleRangeM) continue;
+                if (edge.Id == focusedId) return edge.Id;
+
+                var toDoor = new Vector3(edge.Center.X - head.X, 0f, edge.Center.Z - head.Z);
+                if (Vector3.Dot(forward, toDoor) <= 0f || distance >= bestDistance) continue;
+                nearest = edge.Id;
+                bestDistance = distance;
+            }
+            return nearest;
         }
 
         private string Raycast()
         {
-            var ray = new Ray(_camera.transform.position, _camera.transform.forward);
-            if (!Physics.Raycast(ray, out var hit, _pc.InteractRangeM, ~0, QueryTriggerInteraction.Collide)) return null;
-            var target = hit.collider.GetComponentInParent<InteractTarget>();
-            return target != null ? target.TargetId : null;
+            var center = _camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+            var ray = new Ray(_camera.transform.position, center.direction);
+            float range = _pc.InteractRangeM;
+            // Item interactions measure reach along the floor. Allow the sight ray to reach
+            // a low object within that range even when looking down from standing height.
+            float sightRange = Mathf.Sqrt(range * range + ray.origin.y * ray.origin.y);
+            if (Physics.Raycast(ray, out var hit, sightRange, ~0, QueryTriggerInteraction.Collide))
+            {
+                var target = hit.collider.GetComponentInParent<InteractTarget>();
+                if (target != null)
+                {
+                    bool itemInReach = _building.Objects.ContainsKey(target.TargetId) &&
+                        InHorizontalReach(ray.origin, hit.point, range);
+                    if (hit.distance <= range || itemInReach) return target.TargetId;
+                }
+            }
+
+            // The direct target wins. For thin objects, look for a visible surface
+            // within one body width of the crosshair's ray.
+            string nearest = null;
+            float bestOffset = _body.radius * 2f;
+            foreach (var item in _building.Objects.Values)
+            {
+                if (!item.Go.activeInHierarchy || !item.Go.TryGetComponent<Collider>(out var collider)) continue;
+                var centerOffset = collider.bounds.center - ray.origin;
+                float projection = Vector3.Dot(centerOffset, ray.direction);
+                if (projection <= 0f) continue;
+
+                Vector3 surface = collider.ClosestPoint(ray.GetPoint(Mathf.Min(projection, sightRange)));
+                if (!InHorizontalReach(ray.origin, surface, range)) continue;
+
+                Vector3 surfaceOffset = surface - ray.origin;
+                float offset = Vector3.Cross(ray.direction, surfaceOffset).magnitude;
+                if (offset >= bestOffset) continue;
+                if (!CanSeeItem(ray.origin, surfaceOffset, collider, range) &&
+                    !CanSeeItem(ray.origin, centerOffset, collider, range)) continue;
+
+                bestOffset = offset;
+                nearest = item.Id;
+            }
+            return nearest;
+        }
+
+        private static bool CanSeeItem(Vector3 origin, Vector3 toward, Collider collider, float range)
+        {
+            // Extend to the collider's far side so a ray aimed at its boundary can register contact.
+            float distance = toward.magnitude + collider.bounds.extents.magnitude;
+            return Physics.Raycast(origin, toward.normalized, out var hit, distance, ~0, QueryTriggerInteraction.Collide) &&
+                hit.collider == collider && InHorizontalReach(origin, hit.point, range);
+        }
+
+        private static bool InHorizontalReach(Vector3 origin, Vector3 point, float range)
+        {
+            var delta = point - origin;
+            delta.y = 0f;
+            return delta.sqrMagnitude <= range * range;
         }
 
         private bool IsDoor(string id) => id != null && _building.Doors.ContainsKey(id);
 
-        private bool IsKind(string id, ObjectKind kind) => _building.Objects.TryGetValue(id, out var o) && o.Kind == kind;
+        private bool IsKind(string id, ObjectKind kind) => id != null && _building.Objects.TryGetValue(id, out var o) && o.Kind == kind;
 
         private bool IsPickable(string id) =>
             _building.Objects.TryGetValue(id, out var o) &&

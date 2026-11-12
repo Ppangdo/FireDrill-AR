@@ -88,7 +88,7 @@ namespace FireDrill.Runtime
             if (!_flow.RunActive || _flow.Paused || _flow.State != FlowState.Fire) return;
             foreach (var a in _agents.Values)
             {
-                a.Step(dt);
+                a.Step(dt, _agents.Values);
                 DetectIgnore(a, dt);
             }
         }
