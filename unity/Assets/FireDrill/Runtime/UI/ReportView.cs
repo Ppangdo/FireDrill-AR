@@ -15,7 +15,8 @@ namespace FireDrill.Runtime
         private UIDocument _doc;
         private PanelSettings _panel;
         private VisualElement _root;
-        private Label _outcome, _score, _meta, _summary, _source, _compare, _npc;
+        private Label _outcome, _score, _meta, _summary, _source, _compareDelay, _compareScore, _npc;
+        private VisualElement _comparison;
         private TimelineGraph _timeline;
         private ScrollView _items;
         private ReportModel _model;
@@ -34,14 +35,16 @@ namespace FireDrill.Runtime
         {
             _config = config;
             var ui = config.Runtime.Ui;
-            _doc = UiPanel.Create(gameObject, ui, "ReportView", "Report", 10, out _panel);
+            _doc = UiPanel.Create(gameObject, ui, "ReportView", 10, out _panel);
             _root = _doc.rootVisualElement.Q("report-root");
             _outcome = _root.Q<Label>("outcome");
             _score = _root.Q<Label>("score");
             _meta = _root.Q<Label>("meta");
             _summary = _root.Q<Label>("summary");
             _source = _root.Q<Label>("source");
-            _compare = _root.Q<Label>("compare");
+            _comparison = _root.Q("comparison");
+            _compareDelay = _comparison.Q<Label>("compare-delay");
+            _compareScore = _comparison.Q<Label>("compare-score");
             _npc = _root.Q<Label>("npc");
             _items = _root.Q<ScrollView>("items");
             _timeline = new TimelineGraph();
@@ -88,8 +91,7 @@ namespace FireDrill.Runtime
             _source.text = m.Pending ? "문장을 다듬는 중… (지금은 기본 문장)"
                 : m.Source == "template" || m.ServerFallback ? "기본 문장(평가 기준표)으로 작성"
                 : $"AI가 다듬은 문장 ({m.Source}) · 점수와 등급은 규칙으로 계산";
-            _compare.text = CompareText(m);
-            _compare.style.display = string.IsNullOrEmpty(_compare.text) ? DisplayStyle.None : DisplayStyle.Flex;
+            RefreshComparison(m);
 
             _timeline.SetData(ev.Timeline, ui.TimelineMaxC, _config.Graph, m.FireT);
 
@@ -135,9 +137,10 @@ namespace FireDrill.Runtime
         }
 
         /// <summary>16.13: does the second attempt start the evacuation sooner? Uses evac_delay evidence.</summary>
-        private static string CompareText(ReportModel m)
+        private void RefreshComparison(ReportModel m)
         {
-            if (m.Previous == null) return null;
+            UiPanel.Show(_comparison, m.Previous != null);
+            if (m.Previous == null) return;
             float? Delay(EvaluationResult e)
             {
                 var item = e.Items.FirstOrDefault(i => i.Id == "evac_delay");
@@ -146,9 +149,9 @@ namespace FireDrill.Runtime
             }
             var before = Delay(m.Previous);
             var now = Delay(m.Evaluation);
-            string F(float? s) => s.HasValue ? $"{s.Value:0}초" : "시작 안 함";
-            var trend = before.HasValue && now.HasValue ? (now < before ? " — 더 빨라졌습니다" : now > before ? " — 더 늦어졌습니다" : "") : "";
-            return $"대피 개시까지: 지난 시도 {F(before)} → 이번 {F(now)}{trend} · 총점 {m.Previous.TotalPct}% → {m.Evaluation.TotalPct}%";
+            string FormatDelay(float? seconds) => seconds.HasValue ? $"{seconds.Value:0.#}초" : "측정 안 됨";
+            _compareDelay.text = $"대피 개시까지  {FormatDelay(before)} → {FormatDelay(now)}";
+            _compareScore.text = $"총점  {m.Previous.TotalPct}% → {m.Evaluation.TotalPct}%";
         }
 
         private void OnDestroy()

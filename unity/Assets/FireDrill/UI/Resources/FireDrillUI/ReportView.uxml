@@ -1,6 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="Report.uss" />
     <!-- 16.11 Report: result and score / summary / head-height smoke timeline / item table / NPC results / buttons -->
-    <ui:VisualElement name="report-root" class="report">
+    <ui:VisualElement name="report-root" style="display: none;" class="report">
         <ui:VisualElement class="header">
             <ui:Label name="outcome" class="outcome" />
             <ui:Label name="score" class="score" />
@@ -8,7 +9,13 @@
         </ui:VisualElement>
         <ui:Label name="summary" class="summary" />
         <ui:Label name="source" class="source" />
-        <ui:Label name="compare" class="compare" />
+        <ui:VisualElement name="comparison" class="comparison" style="display: none;">
+            <ui:Label text="이전 시도와 비교" class="comparison-title" />
+            <ui:VisualElement class="comparison-values">
+                <ui:Label name="compare-delay" class="comparison-value" />
+                <ui:Label name="compare-score" class="comparison-value" />
+            </ui:VisualElement>
+        </ui:VisualElement>
         <ui:Label text="머리 높이의 연기 농도" class="section-title" />
         <ui:VisualElement name="timeline" class="timeline" />
         <ui:Label text="항목별 결과" class="section-title" />

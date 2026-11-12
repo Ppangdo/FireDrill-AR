@@ -199,9 +199,12 @@ namespace FireDrill.Runtime
             FinishRun(outcome);
         }
 
+        public event Action RunFinishing;
+
         private void FinishRun(Outcome outcome)
         {
             LastOutcome = outcome;
+            RunFinishing?.Invoke();
             _recorder.Record(EventTypes.RunEnd, new { outcome = outcome.ToString().ToLowerInvariant() });
             _recorder.EndRun();
             RunActive = false;

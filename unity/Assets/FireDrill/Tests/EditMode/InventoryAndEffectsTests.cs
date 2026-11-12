@@ -22,12 +22,35 @@ namespace FireDrill.Tests
             Assert.IsNull(inv.Pickup("o_towel"));
             Assert.AreEqual("o_towel", inv.Hand);
             Assert.IsNull(inv.Pickup("o_bag"));
-            CollectionAssert.AreEqual(new[] { "o_towel" }, inv.Bag);
+            CollectionAssert.AreEqual(new[] { "o_towel", null }, inv.Bag);
             Assert.IsNull(inv.Pickup("o_phone"));
             CollectionAssert.AreEqual(new[] { "o_towel", "o_bag" }, inv.Bag);
             Assert.AreEqual("o_phone", inv.Pickup("o_doc"), "bag full: the held item falls");
             Assert.AreEqual("o_doc", inv.Hand);
             Assert.IsTrue(inv.HasTowel);
+        }
+
+        [Test]
+        public void SwapWithBag_KeepsSlotPositionsAndDoesNotDuplicateItems()
+        {
+            var inv = Inv();
+            inv.Pickup("o_towel");
+            inv.WetTowel();
+            inv.ToggleTowel();
+            inv.SwapWithBag(1);
+            Assert.IsNull(inv.Hand);
+            CollectionAssert.AreEqual(new[] { null, "o_towel" }, inv.Bag);
+            CollectionAssert.AreEqual(new[] { "o_towel" }, inv.All);
+            Assert.AreEqual(TowelState.Wet, inv.Towel);
+
+            inv.Pickup("o_ext");
+            inv.SwapWithBag(1);
+            Assert.AreEqual("o_towel", inv.Hand);
+            CollectionAssert.AreEqual(new[] { null, "o_ext" }, inv.Bag);
+            inv.Drop();
+            inv.SwapWithBag(1);
+            Assert.AreEqual("o_ext", inv.Hand);
+            CollectionAssert.AreEqual(new string[2], inv.Bag);
         }
 
         [Test]

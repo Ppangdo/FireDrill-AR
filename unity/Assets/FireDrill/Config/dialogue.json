@@ -25,7 +25,7 @@
     },
     "npc_minji_idle": {
       "speaker": "민지",
-      "text": "선배, 저 과제 거의 다 했어요.",
+      "text": "선배, 교수님 서류 찾으세요? 301호 교탁 위에 있어요. 가져오면 이 실습실로 돌아오세요.",
       "next": null
     },
     "npc_junho_idle": {

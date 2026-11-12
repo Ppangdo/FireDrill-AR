@@ -38,6 +38,8 @@ namespace FireDrill.Tests.PlayMode
             var expect = player.Script.Expect;
             var ev = boot.LastEvaluation;
             Assert.IsNotNull(ev);
+            Assert.IsFalse(boot.Audio.AlarmOn, "alarm stops when the run ends");
+            Assert.IsFalse(boot.Audio.CrackleOn, "fire audio stops when the run ends");
 
             var report = string.Join("\n", ev.Items.Select(i => $"  {i.Id}: {i.Grade.ToString().ToLowerInvariant()} {Newtonsoft.Json.JsonConvert.SerializeObject(i.Evidence)}"));
             Debug.Log($"[{script}] outcome {ev.Outcome} total {ev.TotalPct}% elapsed {ev.ElapsedS:0.0}\n{report}\nlog {boot.LastRunFile}");
@@ -54,6 +56,29 @@ namespace FireDrill.Tests.PlayMode
                 Assert.AreEqual(kv.Value, results[kv.Key].ToString().ToLowerInvariant(), $"npc_results {kv.Key}");
             Assert.AreEqual(boot.Npcs.Results.Count, boot.Report.Current?.NpcResults.Count ?? boot.Npcs.Results.Count, "report lists every NPC");
             Assert.AreEqual(boot.Recorder.Events.Count, Harness.FileLines(boot.LastRunFile).Length);
+        }
+
+        [UnityTest]
+        public IEnumerator ContinuousSpray_RequiresAimAndExtinguishesBeforeRelease()
+        {
+            var boot = Launch("walk_play", out var player);
+            yield return Harness.WaitFor(() => boot.Flow.State == FlowState.Fire, 20f, () => "no fire");
+            var items = boot.Items;
+            var fire = items.FireCenter();
+            player.Teleport(new Vec3(fire.x, 0f, fire.z), 0f);
+            items.Inventory.Pickup("o_ext_corr_s");
+            float duration = boot.Config.Fire.ExtinguishNeededS;
+            items.UpdateSpray(true, false, duration);
+            Assert.AreEqual(0f, items.ExtinguishProgress, "spraying away from the fire only spends charge");
+            Assert.AreEqual(FirePhase.Initial, boot.Fire.Engine.Phase);
+
+            items.UpdateSpray(true, true, duration);
+            Assert.AreEqual(FirePhase.Extinguished, boot.Fire.Engine.Phase);
+            Assert.IsTrue(items.IsSpraying);
+            Assert.IsTrue(boot.Recorder.Events.Any(e => e.Type == EventTypes.Extinguish && (bool)e.Data["success"]));
+
+            items.UpdateSpray(false, false, 0f);
+            Assert.IsFalse(items.IsSpraying);
         }
 
         [UnityTest]

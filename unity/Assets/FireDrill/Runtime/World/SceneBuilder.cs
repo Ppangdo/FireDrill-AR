@@ -13,23 +13,27 @@ namespace FireDrill.Runtime
     {
         private const float Eps = 1e-3f;
 
-        public static BuildingView Build(ZoneGraph graph, RuntimeConfig.SceneSettings cfg, Transform parent = null)
+        public static BuildingView Build(ZoneGraph graph, RuntimeConfig.SceneSettings cfg, Transform parent = null, Font signFont = null)
         {
             var root = new GameObject("Building_" + graph.Data.BuildingId);
             if (parent != null) root.transform.SetParent(parent, false);
             var view = root.AddComponent<BuildingView>();
             var mats = new MaterialCache(cfg);
 
-            foreach (var zone in graph.Zones) BuildZone(view, zone, cfg, mats);
+            foreach (var zone in graph.Zones) BuildZone(view, zone, cfg, mats, signFont);
             BuildWalls(view, graph, cfg, mats);
             foreach (var edge in graph.Edges.Where(e => e.Type == EdgeType.Door)) BuildDoor(view, graph, edge, cfg, mats);
-            foreach (var edge in graph.Edges) BuildExitSign(view, graph, edge, cfg, mats);
+            foreach (var edge in graph.Edges)
+            {
+                BuildExitSign(view, graph, edge, cfg, mats);
+                if (edge.Type == EdgeType.Door) BuildRoomSign(view, graph, edge, cfg, mats, signFont);
+            }
             return view;
         }
 
         // ---- floors, ceilings, lights, objects -------------------------------
 
-        private static void BuildZone(BuildingView view, Zone zone, RuntimeConfig.SceneSettings cfg, MaterialCache mats)
+        private static void BuildZone(BuildingView view, Zone zone, RuntimeConfig.SceneSettings cfg, MaterialCache mats, Font signFont)
         {
             var go = new GameObject("Zone_" + zone.Id);
             go.transform.SetParent(view.transform, false);
@@ -68,7 +72,43 @@ namespace FireDrill.Runtime
                 var target = prim.AddComponent<InteractTarget>();
                 target.TargetId = obj.Id;
                 view.Objects[obj.Id] = new ObjectView(obj.Id, obj.Kind, prim);
+                if (shape.Pickable) BuildItemStand(go.transform, obj, shape, cfg, mats);
+                if (obj.Kind == ObjectKind.Faucet)
+                    BuildFaucetDetails(prim, ToWorld(obj.Pos), centroid, cfg, mats, signFont);
             }
+        }
+
+        private static void BuildItemStand(Transform parent, BuildingObject obj, RuntimeConfig.ObjectShape shape,
+                                           RuntimeConfig.SceneSettings cfg, MaterialCache mats)
+        {
+            float top = obj.Pos.Y - shape.SizeM[1] / 2f;
+            if (top <= Eps) return;
+
+            var stand = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            stand.name = "Stand_" + obj.Id;
+            stand.transform.SetParent(parent, false);
+            stand.transform.position = new Vector3(obj.Pos.X, top / 2f, obj.Pos.Z);
+            stand.transform.localScale = new Vector3(shape.SizeM[0] + cfg.WallThicknessM, top,
+                                                     shape.SizeM[2] + cfg.WallThicknessM);
+            stand.GetComponent<Renderer>().sharedMaterial = mats.Get(cfg.Colors["door"]);
+        }
+
+        private static void BuildFaucetDetails(GameObject faucet, Vector3 position, Vector3 zoneCenter,
+                                               RuntimeConfig.SceneSettings cfg, MaterialCache mats, Font font)
+        {
+            var towardRoom = zoneCenter - position;
+            towardRoom.y = 0f;
+            towardRoom.Normalize();
+            var size = faucet.transform.localScale;
+            var fixture = mats.Get(cfg.Colors["handle"]);
+            var parent = faucet.transform.parent;
+            var spoutBase = position - towardRoom * (size.x / 4f) + Vector3.up * (size.y * 0.7f);
+            DecorativeBox("TapStem", parent, spoutBase, new Vector3(size.z / 6f, size.y / 2f, size.z / 6f),
+                          Quaternion.identity, fixture);
+            DecorativeBox("TapSpout", parent, spoutBase + Vector3.up * (size.y / 4f) + towardRoom * (size.x / 8f),
+                          new Vector3(size.z / 6f, size.y / 5f, size.x / 3f), Quaternion.LookRotation(towardRoom), fixture);
+            var labelPos = position + Vector3.up * size.y + towardRoom * (size.x / 2f);
+            BuildPlaque("WaterSign", font != null ? "수도" : "WATER", parent, labelPos, towardRoom, cfg, mats, font);
         }
 
         private static string ColorKey(ZoneType t) => t switch
@@ -249,6 +289,70 @@ namespace FireDrill.Runtime
             sign.GetComponent<Renderer>().sharedMaterial = mats.Get(cfg.Colors["exit_sign"], unlit: true);
             UnityEngine.Object.Destroy(sign.GetComponent<Collider>());
             view.ExitSigns.Add(sign);
+        }
+
+        private static void BuildRoomSign(BuildingView view, ZoneGraph graph, Edge edge, RuntimeConfig.SceneSettings cfg,
+                                          MaterialCache mats, Font font)
+        {
+            var room = graph.Zone(edge.From);
+            string facing = edge.To;
+            if (room.Type != ZoneType.Room)
+            {
+                room = graph.Zone(edge.To);
+                facing = edge.From;
+            }
+            if (room.Type != ZoneType.Room) return;
+
+            string number = new string(room.Name.TakeWhile(char.IsDigit).ToArray());
+            if (number.Length == 0) return;
+            var center = new Vector3(edge.Center.X, 0, edge.Center.Z);
+            var normal = edge.WallAxis == WallAxis.X ? Vector3.forward : Vector3.right;
+            var probe = center + normal * cfg.WallThicknessM;
+            if (graph.ZoneAt(new Vec3(probe.x, 0f, probe.z)) != facing) normal = -normal;
+            var position = center + normal * (cfg.WallThicknessM + cfg.ExitSignSizeM[2]) +
+                           Vector3.up * cfg.ExitSignHeightM;
+            BuildPlaque("RoomSign_" + number, number, view.transform, position, normal, cfg, mats, font);
+        }
+
+        private static void BuildPlaque(string name, string caption, Transform parent, Vector3 position, Vector3 normal,
+                                        RuntimeConfig.SceneSettings cfg, MaterialCache mats, Font font)
+        {
+            var size = new Vector3(cfg.ExitSignSizeM[0], cfg.ExitSignSizeM[1], cfg.ExitSignSizeM[2]);
+            var rotation = Quaternion.LookRotation(-normal, Vector3.up);
+            DecorativeBox(name, parent, position, size, rotation, mats.Get("#18334D", unlit: true));
+            var label = new GameObject(name + "_Label");
+            label.transform.SetParent(parent, false);
+            label.transform.SetPositionAndRotation(position + normal * (size.z / 2f + Eps), rotation);
+            var text = label.AddComponent<TextMesh>();
+            text.text = caption;
+            text.anchor = TextAnchor.MiddleCenter;
+            text.alignment = TextAlignment.Center;
+            text.fontSize = 48;
+            text.characterSize = size.y / 3f;
+            SetWorldTextFont(text, font);
+        }
+
+        private static void DecorativeBox(string name, Transform parent, Vector3 position, Vector3 size,
+                                          Quaternion rotation, Material material)
+        {
+            var box = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            box.name = name;
+            box.transform.SetParent(parent, false);
+            box.transform.SetPositionAndRotation(position, rotation);
+            box.transform.localScale = size;
+            box.GetComponent<Renderer>().sharedMaterial = material;
+            box.GetComponent<Collider>().enabled = false;
+            UnityEngine.Object.Destroy(box.GetComponent<Collider>());
+        }
+
+        /// <summary>Use the font atlas with a material that respects scene depth.</summary>
+        public static void SetWorldTextFont(TextMesh text, Font font)
+        {
+            text.font = font ?? text.font ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var material = text.font.material;
+            var shader = Resources.Load<Shader>(UiPanel.ResourceDir + "WorldText");
+            if (shader != null) material.shader = shader;
+            text.GetComponent<MeshRenderer>().sharedMaterial = material;
         }
 
         // ---- meshes ----------------------------------------------------------

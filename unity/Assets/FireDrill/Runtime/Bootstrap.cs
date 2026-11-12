@@ -53,6 +53,8 @@ namespace FireDrill.Runtime
         private DebugOverlay _overlay;
         /// <summary>Current one-line subtitle and when it disappears (realtime).</summary>
         public string Subtitle { get; private set; }
+        private LineRenderer _sprayStream;
+        private bool _nearActiveFire;
         private float _subtitleUntil;
         public ServerClient Server { get; private set; }
         public EvaluationResult LastEvaluation { get; private set; }
@@ -81,7 +83,10 @@ namespace FireDrill.Runtime
             if (BootstrapOptions.Offline.HasValue) app.Offline = BootstrapOptions.Offline.Value;
             var rt = Config.Runtime;
 
-            Building = SceneBuilder.Build(Config.Graph, rt.Scene, transform);
+            Font signFont = null;
+            if (Font.GetOSInstalledFontNames().Contains(rt.Ui.FallbackOsFont))
+                signFont = Font.CreateDynamicFontFromOSFont(rt.Ui.FallbackOsFont, rt.Ui.FontSamplingPt);
+            Building = SceneBuilder.Build(Config.Graph, rt.Scene, transform, signFont);
 
             var engine = new FireEngine();
             Platform = PlatformRegistry.Create(BootstrapOptions.Platform ?? app.Platform, new PlatformContext
@@ -154,6 +159,14 @@ namespace FireDrill.Runtime
             Body.Init(Platform, rt);
             Audio = fx.AddComponent<AudioFx>();
             Audio.Init(FireView.transform.position, rt);
+            var spray = new GameObject("ExtinguisherStream");
+            spray.transform.SetParent(fx.transform, false);
+            _sprayStream = spray.AddComponent<LineRenderer>();
+            _sprayStream.sharedMaterial = Materials.Transparent(new Color(0.96f, 0.98f, 1f, 0.64f));
+            _sprayStream.positionCount = 2;
+            _sprayStream.startWidth = 0.055f;
+            _sprayStream.endWidth = 0.34f;
+            _sprayStream.enabled = false;
 
             var subs = rt.Effects.Subtitles;
             Fire.Ticked += (t, dt) => Smoke.OnTick();
@@ -173,7 +186,24 @@ namespace FireDrill.Runtime
                 if (hot) { Body.HotHandle(); Audio.HotHandle(); }
                 Say(subs[hot ? "hot_handle" : "cool_handle"]);
             };
-            Items.Sprayed += _ => Audio.Spray();
+            Items.AlarmPressed += () =>
+            {
+                if (Flow.State == FlowState.Fire)
+                {
+                    Say(subs["alarm"]);
+                    Audio.SetAlarm(true);
+                }
+                else
+                {
+                    Say("화재경보 발신기를 눌렀습니다. 지금은 화재 상황이 아닙니다.");
+                    Audio.ConfirmAlarmPress();
+                }
+            };
+            Items.TowelWetted += () => Say("수건을 적셨습니다. T로 코·입에 댈 수 있습니다.");
+            Items.Sprayed += success =>
+            {
+                if (success) Say("초기 화재를 진화했습니다. 남은 연기를 피해 대피하세요.");
+            };
             Flow.RunStarted += _ =>
             {
                 Smoke.Snap();
@@ -181,9 +211,15 @@ namespace FireDrill.Runtime
                 Body.SetStage(0);
                 Audio.StopAll();
                 Subtitle = null;
+                _nearActiveFire = false;
             };
-            Flow.StateChanged += (from, to) => { if (to == FlowState.Aborted) SetEffects(false); };
-            Flow.PausedChanged += paused => SetEffects(!paused);
+            Flow.StateChanged += (from, to) =>
+            {
+                if (to == FlowState.Ending || to == FlowState.Report || to == FlowState.Aborted)
+                    SetEffects(false);
+                else if (to == FlowState.PreFire) SetEffects(true);
+            };
+            Flow.PausedChanged += paused => SetEffects(!paused && Flow.RunActive);
         }
 
         private void BuildReport()
@@ -218,7 +254,11 @@ namespace FireDrill.Runtime
             Smoke.SetVisible(on);
             FireView.SetVisible(on);
             Body.SetVisible(on);
-            if (!on) Audio.StopAll();
+            if (!on)
+            {
+                Audio.StopAll();
+                _sprayStream.enabled = false;
+            }
         }
 
         /// <summary>One-line subtitle for subtitle_s (16.11).</summary>
@@ -295,23 +335,59 @@ namespace FireDrill.Runtime
             Server.Update(Time.unscaledDeltaTime);
             if (_bootReady && Flow.State == FlowState.Boot) Flow.BootDone();
             else if (_autoBegin) { _autoBegin = false; Begin(BootstrapOptions.ParticipantCode); }
+            UpdateExtinguisher(Time.deltaTime);
             Flow.Tick(Time.deltaTime);
             Fire.Update();
+            var firePhase = Fire.Engine.Phase;
+            bool nearActiveFire = Flow.State == FlowState.Fire && !Flow.Paused &&
+                firePhase != FirePhase.None && firePhase != FirePhase.Extinguished &&
+                Config.Graph.ZoneAt(Platform.Rig.Head) == Config.Scenario.Fire.OriginZone;
+            if (nearActiveFire && !_nearActiveFire) Say("화점 가까이입니다. 즉시 안전한 쪽으로 물러나세요.");
+            _nearActiveFire = nearActiveFire;
             Npcs.Update(Time.deltaTime);
             Dialogue.Update(Time.deltaTime);
-            Platform.UiFocus = Ui.WantsCursor;
+            bool playing = Flow.State == FlowState.Tutorial || Flow.State == FlowState.PreFire || Flow.State == FlowState.Fire;
+            Platform.UiFocus = !playing || Flow.Paused || Ui.WantsCursor;
             Recorder.Update(); // ZONE_ENTER into the exit is logged before the run ends
             if (Subtitle != null && Time.realtimeSinceStartup > _subtitleUntil) Subtitle = null;
             var phase = Fire.Engine.Phase;
-            if (Flow.State != FlowState.Aborted && !Flow.Paused)
-                Audio.SetFire(phase == FirePhase.Initial || phase == FirePhase.Growing || phase == FirePhase.Full);
+            Audio.SetFire(Flow.State == FlowState.Fire && !Flow.Paused &&
+                (phase == FirePhase.Initial || phase == FirePhase.Growing || phase == FirePhase.Full));
             if (Flow.State == FlowState.Fire)
             {
                 var zone = Recorder.CurrentZone;
                 if (zone != null && Config.Graph.IsExit(zone)) Flow.ReachedExit();
             }
-            Platform.InputEnabled = !Flow.Paused && !Items.Busy &&
+            Platform.InputEnabled = !Flow.Paused &&
                 (Flow.State == FlowState.Tutorial || Flow.State == FlowState.PreFire || Flow.State == FlowState.Fire);
+        }
+
+        private void UpdateExtinguisher(float dt)
+        {
+            var camera = Platform.Camera;
+            bool held = Platform.Input is IContinuousSprayInput input && input.SprayHeld && camera != null &&
+                Items.Inventory.HandKind == "extinguisher";
+            bool aimedAtFire = false;
+            Vector3 end = default;
+            if (held)
+            {
+                var ray = camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+                float range = Config.Fire.ExtinguishRangeM;
+                end = ray.GetPoint(range);
+                if (Physics.Raycast(ray, out var hit, range, ~0, QueryTriggerInteraction.Collide))
+                {
+                    end = hit.point;
+                    aimedAtFire = hit.collider.GetComponentInParent<InteractTarget>()?.TargetId == ItemInteractions.FireTarget;
+                }
+            }
+
+            Items.UpdateSpray(held, aimedAtFire, dt);
+            Audio.SetSpray(Items.IsSpraying);
+            _sprayStream.enabled = Items.IsSpraying;
+            if (!Items.IsSpraying) return;
+            var view = camera.transform;
+            _sprayStream.SetPosition(0, view.TransformPoint(new Vector3(0.23f, -0.22f, 0.35f)));
+            _sprayStream.SetPosition(1, end);
         }
 
         private void OnDestroy()

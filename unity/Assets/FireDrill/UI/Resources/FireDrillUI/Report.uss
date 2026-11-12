@@ -14,7 +14,14 @@
 .meta { font-size: 20px; color: rgb(170, 176, 186); margin-bottom: 6px; }
 .summary { white-space: normal; font-size: 22px; margin: 6px 0 4px 0; }
 .source { font-size: 15px; color: rgb(140, 146, 156); margin-bottom: 2px; }
-.compare { font-size: 18px; color: rgb(255, 214, 120); margin-bottom: 4px; }
+.comparison {
+    padding: 10px 16px; margin: 8px 0 4px 0; flex-shrink: 0;
+    background-color: rgb(31, 44, 58); border-radius: 8px;
+    border-left-width: 3px; border-left-color: rgb(101, 171, 255);
+}
+.comparison-title { font-size: 18px; color: rgb(168, 202, 239); -unity-font-style: bold; }
+.comparison-values { flex-direction: row; flex-wrap: wrap; }
+.comparison-value { font-size: 23px; color: rgb(245, 248, 253); margin: 4px 32px 0 0; }
 .section-title { font-size: 18px; color: rgb(170, 176, 186); margin-top: 10px; margin-bottom: 4px; }
 .timeline { height: 170px; background-color: rgba(255, 255, 255, 0.05); border-radius: 6px; }
 .timeline-label { position: absolute; font-size: 13px; color: rgb(190, 196, 206); }

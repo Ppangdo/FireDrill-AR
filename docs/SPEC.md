@@ -649,7 +649,7 @@ public interface IPlayerRig {            // PC: 캐릭터 컨트롤러, Quest: �
   Vec3 Head { get; } Vec3 Forward { get; } float StandingHeight { get; }
   void Teleport(Vec3 feet, float yawDeg); // 재시도용 (Quest에서는 안내만)
 }
-public enum IntentKind { Use, Grab, Drop, HandleCheck, ToggleDoor, TalkTo, TowelToggle, Abort }
+public enum IntentKind { Use, Grab, Drop, HandleCheck, ToggleDoor, TalkTo, TowelToggle, Abort, SwapBag1, SwapBag2 }
 public readonly struct Intent { public readonly IntentKind Kind; public readonly string TargetId; }
 public interface IInteractionSource {    // PC: 키보드+시점 레이캐스트, Quest: 손 추적
   event Action<Intent> IntentRaised;     // 대상 판별까지 끝낸 결과만 올린다
@@ -915,8 +915,8 @@ PC 데모를 만들 때 AI가 추측하지 않도록 화면·조작·배치의 �
 | `o_phone_302` | phone | \[5.5, 0.8, 15\] |
 | `o_document` | document | \[6, 0.9, 3\] (301 교탁) |
 | `o_alarm_corr_m` | alarm | \[1.95, 1.2, 9\] |
-| `o_ext_corr_s` | extinguisher | \[0.05, 0.5, 6\] |
-| `o_ext_corr_n` | extinguisher | \[0.05, 0.5, 17\] |
+| `o_ext_corr_s` | extinguisher | \[0.18, 0.5, 6\] |
+| `o_ext_corr_n` | extinguisher | \[0.18, 0.5, 17\] |
 | `o_elev_button` | elevator\_button | \[−3.95, 1.1, 12\] |
 
 시나리오는 14.5의 `scenario.json` 예시 그대로다(발화 `z_storage_303`, PreFire 20초 후). 튜토리얼에서 301호 서류를 302호로 가져오면 PreFire가 시작된다.
@@ -962,6 +962,8 @@ PC 데모를 만들 때 AI가 추측하지 않도록 화면·조작·배치의 �
 | 버리기 | G | 든 물건 내려놓기 |
 | 비상 중단 | Esc 2초 누르기 | 즉시 Aborted |
 
+PC 물건 조준의 1.5m 도달 거리는 바닥 평면에서 잰다. 시선이 벽이나 닫힌 문에 가로막히면 해당 물건을 인식하지 않는다.
+
 ### 16.8 연속 출구 거리
 
 `ExitDistance(pos)` = (현재 구역에서 출구로 가는 최단 경로의 **첫 문 중심까지 직선거리**) + (그 문에서 출구 구역 첫 문까지 문 중심 간 거리 합). 출구 구역 안이면 0. 경로 탐색은 문 중심을 노드로 한 다익스트라이고, 차단 간선은 제외하며 닫힌 문은 지날 수 있는 것으로 본다. 두 출구 중 가까운 쪽을 쓴다. `evac_delay`는 이 값이 5초 동안 연속으로 줄어든(초당 0.3m 이상) 구간의 시작 시각을 쓴다.
@@ -988,6 +990,8 @@ NPC는 캡슐 + 머리 위 이름표(에셋이 오면 교체). 이동은 내비�
 
 손에 드는 슬롯 1개 + 가방 슬롯 2개. 손에 물건이 있을 때 E로 다른 것을 줍으면 들던 것은 가방으로(가득 차면 바닥에) 간다. 주울 때 걸리는 시간은 모두 1초(이 시간이 `belongings` 측정에 들어감).
 
+PC에서 Z/X는 손과 가방 1/2번의 물건을 교체한다. 빈 가방 칸에 손의 물건을 넣거나, 빈 손으로 가방에서 물건을 꺼낼 수 있다. HUD에서 손과 두 가방 칸, 교체 키, 소지품에 맞는 사용 키를 표시한다.
+
 | kind | 기본 도형 | 줍기 | essential | 비고 |
 | --- | --- | --- | --- | --- |
 | `towel` | 흰 판 0.3×0.05×0.2 | O | true | 수도에서 적시면 Wet, T로 착용 |
@@ -1009,7 +1013,7 @@ UI는 UI Toolkit(UXML·USS 텍스트 파일)으로 만든다. 폰트는 실행 �
 | 대화창 | 튜토리얼·NPC | 하단 1/3, 화자 이름 + 본문 + 선택지 최대 3개(숫자키 1\~3 또는 클릭). 대화 중에도 게임은 멈추지 않음(화재 중) |
 | 자막 | 단서·NPC 대사·신체 효과 | 하단 중앙 한 줄, 3초 표시. 예: "(어디선가 타는 냄새가 난다)" |
 | 상호작용 표식 | 대상을 볼 때만 | 화면 중앙 아래 작은 글자 "E: 줍기" |
-| 인벤토리 | 항상 | 오른쪽 아래 작은 글자 3줄: 손 / 가방 1 / 가방 2, 수건 상태 |
+| 인벤토리 | 항상 | 오른쪽 아래 슬롯 3개(손 / 가방 1 / 가방 2), 교체 키와 소지품별 사용 키, 수건 상태 |
 | 신체 효과 | 단계 변화 | URP Volume: 비네팅·채도·블러. 3단계는 시점 흔들림(PC만) |
 | 결말 | Ending | 결과 문구("탈출" / "쓰러졌습니다"), 경과 시간, 마지막 위치의 연기 농도 공개 |
 | 리포트 | Report | 상단 결과·총점 / 요약 3\~4줄 / 머리 높이 연기 농도 타임라인(선 그래프, 구역 이동 표시) / 항목표(등급·잘한 점·개선할 점·행동요령) / NPC 결과 / "다시 하기"·"종료" 버튼 |

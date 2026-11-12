@@ -26,14 +26,20 @@ namespace FireDrill.Runtime
         private float _busyUntil; // scaled game time
         private float _sprayed;      // seconds sprayed within range while the fire was initial (FireEngine.Extinguish)
         private float _extinguisherUsed;
+        private float _burstDuration;
+        private FirePhase _burstPhase;
+        public bool IsSpraying { get; private set; }
+        public bool SprayHitsFire { get; private set; }
+        public float ExtinguishProgress => Mathf.Clamp01(_sprayed / _fireCfg.ExtinguishNeededS);
 
         public Inventory Inventory { get; }
         public string LastRefusal { get; private set; }
-        /// <summary>Picking up takes pickup_s: movement and other intents wait.</summary>
+        /// <summary>Other item actions wait during pickup_s.</summary>
         public bool Busy => Time.time < _busyUntil;
         public float ExtinguisherLeftS => Mathf.Max(0, _rt.Items.ExtinguisherCapacityS - _extinguisherUsed);
 
         public event Action AlarmPressed;
+        public event Action TowelWetted;
         public event Action<bool> Sprayed; // success
         public event Action ElevatorCalled;
 
@@ -58,6 +64,7 @@ namespace FireDrill.Runtime
             Inventory = new Inventory(rt.Items.BagSlots, id => _kinds.TryGetValue(id, out var k) ? k : null);
             input.IntentRaised += Handle;
             flow.RunStarted += _ => ResetItems();
+            flow.RunFinishing += () => FinishBurst(false);
             flow.StateChanged += (from, to) =>
             {
                 // Retry-style start (명세서 16.12): the errand document is already in hand.
@@ -65,7 +72,7 @@ namespace FireDrill.Runtime
             };
         }
 
-        public string KindOf(string objectId) => _kinds.TryGetValue(objectId, out var k) ? k : null;
+        public string KindOf(string objectId) => objectId != null && _kinds.TryGetValue(objectId, out var k) ? k : null;
 
         public bool IsPickable(string objectId) =>
             _kinds.TryGetValue(objectId, out var k) && _rt.Scene.Objects.TryGetValue(k, out var s) && s.Pickable;
@@ -73,7 +80,8 @@ namespace FireDrill.Runtime
         private void ResetItems()
         {
             Inventory.Reset();
-            _sprayed = _extinguisherUsed = 0;
+            _sprayed = _extinguisherUsed = _burstDuration = 0;
+            IsSpraying = SprayHitsFire = false;
             foreach (var o in _objects.Values)
             {
                 if (!_view.Objects.TryGetValue(o.Id, out var v)) continue;
@@ -98,6 +106,8 @@ namespace FireDrill.Runtime
                 case IntentKind.Grab: Grab(intent.TargetId); break;
                 case IntentKind.Use: Use(intent); break;
                 case IntentKind.Drop: Drop(); break;
+                case IntentKind.SwapBag1: Inventory.SwapWithBag(0); break;
+                case IntentKind.SwapBag2: Inventory.SwapWithBag(1); break;
                 case IntentKind.TowelToggle: ToggleTowel(); break;
             }
         }
@@ -133,6 +143,7 @@ namespace FireDrill.Runtime
                     if (intent.HoldSeconds + 1e-4f < _rt.Pc.FaucetHoldS) { LastRefusal = "faucet hold too short"; break; }
                     Inventory.WetTowel();
                     _recorder.Record(EventTypes.TowelWet);
+                    TowelWetted?.Invoke();
                     break;
                 case "elevator_button":
                     _recorder.Record(EventTypes.ElevatorCall);
@@ -159,6 +170,44 @@ namespace FireDrill.Runtime
             var on = Inventory.ToggleTowel();
             if (on == null) { LastRefusal = "no towel"; return; }
             _recorder.Record(EventTypes.TowelEquip, new { on = on.Value });
+        }
+
+        public void UpdateSpray(bool held, bool aimedAtFire, float dt)
+        {
+            IsSpraying = held && _flow.RunActive && !_flow.Paused && !Busy &&
+                Inventory.HandKind == "extinguisher" && ExtinguisherLeftS > 0f && dt > 0f;
+            var engine = _fire.Engine;
+            var phase = engine.Phase;
+            float distance = HorizontalDistance(FireCenter());
+            SprayHitsFire = IsSpraying && aimedAtFire && distance <= _fireCfg.ExtinguishRangeM;
+            if (!IsSpraying)
+            {
+                FinishBurst(false);
+                return;
+            }
+
+            if (_burstDuration > 0f && _burstPhase != phase) FinishBurst(false);
+            float duration = Mathf.Min(dt, ExtinguisherLeftS);
+            _extinguisherUsed += duration;
+            _burstPhase = phase;
+            _burstDuration += duration;
+            if (SprayHitsFire && phase == FirePhase.Initial)
+            {
+                _sprayed += duration;
+                if (engine.Extinguish(_flow.T, _sprayed, distance) == ExtinguishResult.Extinguished)
+                    FinishBurst(true);
+            }
+            if (ExtinguisherLeftS <= 0f) FinishBurst(false);
+        }
+
+        private void FinishBurst(bool success)
+        {
+            if (_burstDuration <= 0f) return;
+            if (_burstPhase != FirePhase.None && _burstPhase != FirePhase.Extinguished)
+                _recorder.Record(EventTypes.Extinguish,
+                    new { phase = _burstPhase.ToString().ToLowerInvariant(), duration = (float)Math.Round(_burstDuration, 2), success });
+            _burstDuration = 0f;
+            if (success) Sprayed?.Invoke(true);
         }
 
         /// <summary>Extinguisher in hand, aimed at the fire for <paramref name="seconds"/> (mouse button held).</summary>
@@ -204,6 +253,11 @@ namespace FireDrill.Runtime
         private bool InRange(string id, float range)
         {
             var pos = _view.Objects.TryGetValue(id, out var v) ? v.Go.transform.position : SceneBuilder.ToWorld(_objects[id].Pos);
+            if (v != null && v.Go.TryGetComponent<Collider>(out var collider))
+            {
+                var head = _rig.Head;
+                pos = collider.ClosestPoint(new Vector3(head.X, pos.y, head.Z));
+            }
             float d = HorizontalDistance(pos);
             if (d <= range) return true;
             LastRefusal = $"{id} too far ({d:0.00} m > {range} m)";

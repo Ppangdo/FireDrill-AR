@@ -10,8 +10,8 @@ namespace FireDrill.Runtime
     {
         private const int Rate = 22050;
         private RuntimeConfig.AudioSettings _cfg;
-        private AudioSource _crackle, _alarm, _oneShot;
-        private AudioClip _hiss, _spray;
+        private AudioSource _crackle, _alarm, _oneShot, _sprayLoop;
+        private AudioClip _hiss;
 
         public bool AlarmOn => _alarm != null && _alarm.isPlaying;
         public bool CrackleOn => _crackle != null && _crackle.isPlaying;
@@ -25,7 +25,8 @@ namespace FireDrill.Runtime
             _alarm = Source("Alarm", Beep(_cfg.AlarmHz, _cfg.AlarmOnS, _cfg.AlarmOffS), loop: true, spatial: false);
             _oneShot = Source("OneShot", null, loop: false, spatial: false);
             _hiss = Noise(_cfg.HissS, brown: false, fadeOut: true);
-            _spray = Noise(1f, brown: false);
+            _sprayLoop = Source("Spray", Noise(1f, brown: false), loop: true, spatial: false);
+            _sprayLoop.volume = _cfg.SprayVolume;
         }
 
         public void SetFire(bool burning)
@@ -40,13 +41,20 @@ namespace FireDrill.Runtime
             if (!on && _alarm.isPlaying) _alarm.Stop();
         }
 
+        public void ConfirmAlarmPress() => _oneShot.PlayOneShot(_alarm.clip, _cfg.Volume);
+
         public void HotHandle() => _oneShot.PlayOneShot(_hiss, _cfg.Volume);
-        public void Spray() => _oneShot.PlayOneShot(_spray, _cfg.SprayVolume);
+        public void SetSpray(bool on)
+        {
+            if (on && !_sprayLoop.isPlaying) _sprayLoop.Play();
+            if (!on && _sprayLoop.isPlaying) _sprayLoop.Stop();
+        }
 
         public void StopAll()
         {
             SetFire(false);
             SetAlarm(false);
+            SetSpray(false);
             _oneShot.Stop();
         }
 

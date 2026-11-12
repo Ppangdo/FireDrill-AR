@@ -9,9 +9,8 @@ namespace FireDrill.Runtime
     /// Picking something up while the hand is full moves the held item to the bag, or drops it when the bag is full.</summary>
     public sealed class Inventory
     {
-        private readonly int _bagSlots;
         private readonly Func<string, string> _kindOf;   // object id → snake_case kind
-        private readonly List<string> _bag = new List<string>();
+        private readonly string[] _bag;
 
         public string Hand { get; private set; }
         public IReadOnlyList<string> Bag => _bag;
@@ -22,11 +21,11 @@ namespace FireDrill.Runtime
 
         public Inventory(int bagSlots, Func<string, string> kindOf)
         {
-            _bagSlots = bagSlots;
+            _bag = new string[bagSlots];
             _kindOf = kindOf;
         }
 
-        public IEnumerable<string> All => (Hand != null ? new[] { Hand } : Array.Empty<string>()).Concat(_bag);
+        public IEnumerable<string> All => (Hand != null ? new[] { Hand } : Array.Empty<string>()).Concat(_bag.Where(id => id != null));
         public bool Has(string objectId) => All.Contains(objectId);
         public string FindKind(string kind) => All.FirstOrDefault(id => _kindOf(id) == kind);
         public bool HasTowel => FindKind("towel") != null;
@@ -38,7 +37,7 @@ namespace FireDrill.Runtime
         public void Reset()
         {
             Hand = null;
-            _bag.Clear();
+            Array.Clear(_bag, 0, _bag.Length);
             TowelWet = TowelEquipped = false;
             Changed?.Invoke();
         }
@@ -50,12 +49,23 @@ namespace FireDrill.Runtime
             string dropped = null;
             if (Hand != null)
             {
-                if (_bag.Count < _bagSlots) _bag.Add(Hand);
+                int free = Array.IndexOf(_bag, null);
+                if (free >= 0) _bag[free] = Hand;
                 else dropped = Release(Hand);
             }
             Hand = objectId;
             Changed?.Invoke();
             return dropped;
+        }
+
+        /// <summary>Exchanges the hand with a fixed bag slot. An empty slot can store the held item.</summary>
+        public void SwapWithBag(int index)
+        {
+            if (index < 0 || index >= _bag.Length || (Hand == null && _bag[index] == null)) return;
+            var stored = _bag[index];
+            _bag[index] = Hand;
+            Hand = stored;
+            Changed?.Invoke();
         }
 
         /// <summary>Drops the held item (G). Returns its id, or null when the hand is empty.</summary>
@@ -88,7 +98,6 @@ namespace FireDrill.Runtime
         private string Release(string id)
         {
             if (Hand == id) Hand = null;
-            else _bag.Remove(id);
             if (_kindOf(id) == "towel") TowelEquipped = false; // it stays wet if it was
             return id;
         }

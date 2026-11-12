@@ -77,11 +77,7 @@ namespace FireDrill.Runtime
             text.alignment = TextAlignment.Center;
             text.characterSize = _cfg.NameTagSize;
             text.fontSize = 48;
-            if (tagFont != null)
-            {
-                text.font = tagFont;
-                tag.GetComponent<MeshRenderer>().sharedMaterial = tagFont.material;
-            }
+            SceneBuilder.SetWorldTextFont(text, tagFont);
             _tag = tag.transform;
 
             var button = graph.Zones.SelectMany(z => z.Objects ?? new List<BuildingObject>()).FirstOrDefault(o => o.Kind == ObjectKind.ElevatorButton);
@@ -142,7 +138,7 @@ namespace FireDrill.Runtime
         }
 
         /// <summary>Behaviour step; only called during the fire, not while paused.</summary>
-        public void Step(float dt)
+        public void Step(float dt, IEnumerable<NpcAgent> agents)
         {
             if (Done) { Billboard(); return; }
             if (Listening) { Face(Player); Billboard(); return; }
@@ -150,16 +146,16 @@ namespace FireDrill.Runtime
             {
                 case NpcAction.Evacuate:
                     if (_path.Count == 0 && !_arrived) PlanToExit();
-                    Walk(dt);
+                    Walk(dt, agents);
                     break;
                 case NpcAction.FollowPlayer:
-                    Follow(dt);
+                    Follow(dt, agents);
                     break;
                 case NpcAction.GoElevator:
-                    GoTo(_elevatorSpot, dt);
+                    GoTo(_elevatorSpot, dt, agents);
                     break;
                 case NpcAction.Hide:
-                    if (GoTo(_hideSpot, dt)) CloseHomeDoor();
+                    if (GoTo(_hideSpot, dt, agents)) CloseHomeDoor();
                     break;
                 default: // freeze, ask_help: stay
                     break;
@@ -171,7 +167,7 @@ namespace FireDrill.Runtime
 
         // ---- behaviours ------------------------------------------------------
 
-        private void Follow(float dt)
+        private void Follow(float dt, IEnumerable<NpcAgent> agents)
         {
             float d = DistanceToPlayer;
             if (d > _cfg.LoseDistanceM) { SetAction(NpcAction.Freeze); return; }
@@ -187,11 +183,11 @@ namespace FireDrill.Runtime
                 var zone = _graph.ZoneAt(_player.Head);
                 Plan(zone, target, stopShortBy: sameZone ? _cfg.FollowDistanceM : 0f);
             }
-            Walk(dt);
+            Walk(dt, agents);
         }
 
         /// <returns>true when standing at the spot.</returns>
-        private bool GoTo(Vector3 spot, float dt)
+        private bool GoTo(Vector3 spot, float dt, IEnumerable<NpcAgent> agents)
         {
             if (_arrived) return true;
             if (_destination != spot || _path.Count == 0)
@@ -199,7 +195,7 @@ namespace FireDrill.Runtime
                 _destination = spot;
                 Plan(_graph.ZoneAt(new Vec3(spot.x, 0.1f, spot.z)), spot, 0f);
             }
-            Walk(dt);
+            Walk(dt, agents);
             if (_path.Count == 0 && Flat(transform.position, spot) <= _cfg.ArriveM * 2) _arrived = true;
             return _arrived;
         }
@@ -254,7 +250,7 @@ namespace FireDrill.Runtime
             foreach (var p in points) _path.Enqueue(p);
         }
 
-        private void Walk(float dt)
+        private void Walk(float dt, IEnumerable<NpcAgent> agents)
         {
             if (_doorPause > 0f)
             {
@@ -277,8 +273,44 @@ namespace FireDrill.Runtime
             var flat = new Vector3(target.x - pos.x, 0, target.z - pos.z);
             if (flat.magnitude <= _cfg.ArriveM) { _path.Dequeue(); return; }
             float speed = _cfg.WalkSpeedMps;
-            transform.position = pos + Vector3.ClampMagnitude(flat.normalized * speed * dt, flat.magnitude);
+            var direction = flat.normalized;
+            float maxStep = Mathf.Min(speed * dt, flat.magnitude);
+            float step = LimitStep(pos, direction, maxStep, agents);
+            if (step <= _cfg.ArriveM * dt && Action == NpcAction.Evacuate && !InDoorway())
+            {
+                // An evacuating NPC may pass a slower follower if there is space on the same side of the door.
+                var side = Vector3.Cross(Vector3.up, direction);
+                var zone = Zone;
+                foreach (var passDirection in new[] { side, -side })
+                {
+                    var candidate = pos + passDirection * maxStep;
+                    if (_graph.ZoneAt(new Vec3(candidate.x, 0f, candidate.z)) != zone) continue;
+                    float passStep = LimitStep(pos, passDirection, maxStep, agents);
+                    if (passStep <= step) continue;
+                    direction = passDirection;
+                    step = passStep;
+                    break;
+                }
+            }
+            transform.position = pos + direction * step;
             Face(target);
+        }
+
+        private float LimitStep(Vector3 pos, Vector3 direction, float step, IEnumerable<NpcAgent> agents)
+        {
+            foreach (var other in agents)
+            {
+                if (other == this || other.Done) continue;
+                var separation = other.transform.position - pos;
+                separation.y = 0f;
+                float ahead = Vector3.Dot(separation, direction);
+                if (ahead <= 0f) continue;
+                float clearance = _radius + other._radius;
+                float lateralSq = Mathf.Max(0f, separation.sqrMagnitude - ahead * ahead);
+                if (lateralSq >= clearance * clearance) continue;
+                step = Mathf.Min(step, Mathf.Max(0f, ahead - Mathf.Sqrt(clearance * clearance - lateralSq)));
+            }
+            return step;
         }
 
         /// <summary>Standing in a door opening (within body radius + 0.35 m of its centre): do not stop there.</summary>

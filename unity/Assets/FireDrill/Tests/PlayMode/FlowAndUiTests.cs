@@ -4,10 +4,13 @@ using System.IO;
 using System.Linq;
 using FireDrill.Core;
 using FireDrill.Runtime;
+using FireDrill.Platform.Pc;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.InputSystem;
 using UnityEngine.TestTools;
+using UnityEngine.UIElements;
 
 namespace FireDrill.Tests.PlayMode
 {
@@ -47,7 +50,15 @@ namespace FireDrill.Tests.PlayMode
             {
                 if (Time.realtimeSinceStartup - start > 180f) Assert.Fail($"stuck in {boot.Flow.State} step {player.CurrentStep} t={boot.Flow.T:0.0}");
                 if (boot.Ui.DialogueShown && boot.Dialogue.NodeId == "intro_1") { sawIntro = true; firstLine = boot.Ui.DialogueText; }
-                if (boot.Ui.DialogueShown && boot.Dialogue.NodeId == "errand_return") sawReturn = true;
+                if (!sawReturn && boot.Ui.DialogueShown && boot.Dialogue.NodeId == "errand_return")
+                {
+                    sawReturn = true;
+                    var hud = boot.Ui.GetComponent<UIDocument>().rootVisualElement;
+                    Assert.AreEqual("서류", hud.Q<Label>("hand-item").text);
+                    Assert.AreEqual("비어 있음", hud.Q<Label>("bag1-item").text);
+                    StringAssert.Contains("G", hud.Q<Label>("item-help").text);
+                    yield return Shot(boot, "5_inventory");
+                }
                 if (boot.Flow.State == FlowState.Ending && boot.Ui.EndingShown) sawEnding = true;
                 if (boot.Flow.State == FlowState.Fire && boot.Ui.HudShown) sawHud = true;
                 if (boot.Flow.State == FlowState.Tutorial && sawIntro && boot.Ui.HudShown && !shotDialogue)
@@ -87,7 +98,17 @@ namespace FireDrill.Tests.PlayMode
             yield return null;
             Assert.IsTrue(boot.Ui.StartShown, "briefing / start screen");
             Assert.IsTrue(boot.WaitingForStart);
+            var ui = boot.Ui.GetComponent<UIDocument>().rootVisualElement;
+            Assert.AreEqual(DisplayStyle.None, ui.Q("aborted").resolvedStyle.display);
+            var code = ui.Q<TextField>("code");
+            code.value = "T08";
             yield return Shot(boot, "1_start");
+            if (SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null)
+            {
+                var input = code.Q(className: TextField.inputUssClassName);
+                Assert.Less(input.resolvedStyle.backgroundColor.grayscale, 0.3f, "input has the dark HUD style");
+                Assert.Greater(input.resolvedStyle.color.grayscale, 0.8f, "typed text contrasts with the input");
+            }
             for (int i = 0; i < 30; i++) yield return null;
             Assert.AreEqual(FlowState.Calibration, boot.Flow.State, "nothing starts without the confirm button");
             boot.Begin("T08");
@@ -109,6 +130,42 @@ namespace FireDrill.Tests.PlayMode
             Assert.AreEqual("aborted", (string)boot.Recorder.Events.Last().Data["outcome"]);
             Assert.IsFalse(boot.Ui.DialogueShown || boot.Ui.HudShown);
             yield return Shot(boot, "4_aborted");
+        }
+
+        [UnityTest]
+        public IEnumerator PcPlayer_TargetsLowItemsWithSlightlyOffCenterAim()
+        {
+            BootstrapOptions.Reset();
+            BootstrapOptions.Platform = "pc";
+            BootstrapOptions.Offline = true;
+            BootstrapOptions.LogDir = Paths.Out;
+            var boot = Harness.Launch();
+            yield return Harness.WaitFor(() => boot.Flow.State == FlowState.Calibration, 10f, () => "no calibration");
+            boot.Begin("T10");
+            yield return Harness.WaitFor(() => boot.Flow.State == FlowState.Tutorial, 5f, () => "did not start");
+            var pc = (PcPlayer)boot.Platform;
+            yield return Harness.WaitFor(() => pc.InputEnabled, 5f, () => "PC input disabled");
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            try
+            {
+                keyboard.MakeCurrent();
+                foreach (var id in new[] { "o_ext_corr_s", "o_ext_corr_n", "o_towel_302", "o_document", "o_faucet_302" })
+                {
+                    var target = boot.Building.Objects[id].Go.transform.position;
+                    float offset = id.StartsWith("o_ext") ? 1.42f : 1.1f;
+                    float side = id == "o_faucet_302" ? -1f : 1f;
+                    pc.Teleport(new Vec3(target.x + offset * side, 0f, target.z), side > 0f ? 270f : 90f);
+                    UnityEngine.Cursor.lockState = CursorLockMode.None;
+                    pc.Camera.transform.LookAt(target + Vector3.forward * boot.Config.Runtime.Pc.BodyRadiusM);
+                    Physics.SyncTransforms();
+                    yield return null;
+                    Assert.AreEqual(id, pc.FocusedTargetId, "PC camera can aim at " + id);
+                }
+            }
+            finally
+            {
+                InputSystem.RemoveDevice(keyboard);
+            }
         }
 
         private static string ShotPath(string name) => Path.Combine(Paths.Repo, "out", "screenshots", "stage7", name + ".png");
