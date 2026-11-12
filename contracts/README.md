@@ -131,26 +131,11 @@ Unity -batchmode -projectPath unity -runTests -testPlatform PlayMode -testResult
 
 ## 명세서 반영 대기
 
-1. **14.6 요원 화면 보조 엔드포인트**: `GET /staff/devices` → `{schema_version, devices: [{device_id, connected, status: WsStatus|null, status_age_s}]}`. 요원 화면이 1초마다 읽는다. 9·14.6 표에 추가하면 된다.
-2. **14.6 토큰**: `?token=` 쿼리도 받는다는 것과 WebSocket 토큰·기기 짝 규칙(위 메모).
-3. **14.6 오류**: LLM 실패는 504/502가 아니라 200 + 대체 응답이라는 것(위 메모).
-4. **15.3 서버 명령**: 이 PC에서는 `uv run --project server python -m uvicorn app.main:app --app-dir server --host 0.0.0.0 --port 8000 --ws wsproto`, 테스트는 `uv run --project server python -m pytest server/tests`.
-5. **14.5 설정 파일 표**: `runtime.json`(주인: AI 튜닝, 읽는 쪽: Runtime·Platform.Pc, 내용: PC 조작·씬 생성·흐름 시간·네트워크 수치) 행 추가, "7종" → "8종". 14장 첫 표의 스키마 "11종" → "12종".
-6. **15.3 AI 실행 환경**: PlayMode 명령(`-nographics` 없이 돌리면 스크린샷까지), 프로젝트 설정 `Unity -batchmode -quit -projectPath unity -executeMethod FireDrill.Editor.ProjectSetup.Run`, 빌드 `... -executeMethod FireDrill.Editor.Build.Pc`(→ `unity/Builds/Pc/FireDrill.exe`).
-7. **15장 3단계 행**: 가짜 구현에 "튜토리얼(바로 PreFire)"을 더하고, 문 열기·닫기는 3단계에 들어왔다는 것.
-8. **15장 4단계 행**: 가짜 구현 "NPC 없음" → "NPC는 서 있는 자리표시(대화 선택·NPC_INTERACT만)". 통과 조건은 `npc_results`를 빼고 확인한다는 것.
-9. **16.13 모범 플레이 동선**: 302호 문을 닫고 나오기, 중간 복도에서 낮은 자세로 준호 설득(연기 속에 머무름)을 넣었다는 것.
-10. **14.5 `runtime.json` 내용**: 4단계 항목(아이템·효과·자막·소리 대체) 추가.
-11. **16.1 글꼴**: "없으면 에러 화면" → "없으면 경고 후 OS 글꼴(맑은 고딕)". 시연 전에는 `NotoSansKR-Regular.ttf`를 넣는다.
-12. **16.11 UI 파일 위치**: UXML·USS는 `Assets/FireDrill/UI/Resources/FireDrillUI/`.
-13. **14.5 `runtime.json` 내용**: `network.report_timeout_s`, `ui` 섹션 추가.
-14. **16.9 NPC 결과**: "탈출 순간 10 m 안에서 따라오던 NPC는 구조됨" 규칙, 문간에서 멈추지 않는 것, NPC가 연 문은 DOOR_OPEN을 남기지 않는 것.
-15. **8장 캐시 생성 위치**: `scripts/build_npc_cache.py`(fake/claude, 기존 항목 유지 옵션).
-16. **15.2 플레이 스크립트**: `toggle_door`의 `want_open` 필드.
-17. **16.13 모범 플레이 동선**: 경보 → 복도에서 낮은 자세로 머묾 → 떠나기 직전 준호에게 알림.
-18. **14.5 `runtime.json` 내용**: `npc` 섹션, `network.npc_timeout_s`, `ui.npc_results`.
-19. **5장 Calibration**: PC에서는 시작 안내 화면의 "요원 확인 · 훈련 시작" 버튼이 요원 확인이다(참가자 코드 입력 포함).
-20. **14.5 `runtime.json` 내용**: `ui.line_s`·`prompts`·`items`·`towel_states`·`endings`.
+(없음)
+
+## 명세서 반영 완료 (2026-11-12)
+
+2~7단계에서 생긴 20건은 `docs/SPEC.md` 부록 A로 옮겼다. 앞으로 명세서는 `docs/SPEC.md`를 고친다.
 
 ## 명세서 반영 완료 (2026-11-11)
 
